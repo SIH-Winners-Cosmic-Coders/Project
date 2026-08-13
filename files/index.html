@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Farm Digital Twin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 40 40" width="34" height="34">
+          <path d="M20 4 C24 12 30 14 30 22 C30 29.7 25.5 34 20 34 C14.5 34 10 29.7 10 22 C10 14 16 12 20 4 Z" fill="var(--leaf)"/>
+          <path d="M20 12 L20 30" stroke="var(--loam-900)" stroke-width="1.4" stroke-linecap="round" opacity="0.5"/>
+        </svg>
+      </div>
+      <div>
+        <h1 data-i18n="app_title">Farm Digital Twin</h1>
+        <p class="tagline" data-i18n="tagline">Explainable irrigation, crop, nutrient and risk advisory</p>
+      </div>
+    </div>
+
+    <div class="control">
+      <label for="farmSelect">Farm</label>
+      <select id="farmSelect"></select>
+    </div>
+
+    <div class="control">
+      <label for="langSelect">Language / भाषा / ভাষা</label>
+      <select id="langSelect">
+        <option value="en">English</option>
+        <option value="hi">हिन्दी</option>
+        <option value="bn">বাংলা</option>
+      </select>
+    </div>
+
+    <button id="tickBtn" class="ghost-btn">↻ Simulate next day</button>
+
+    <div class="sync-status" id="syncStatus">
+      <span class="dot" id="syncDot"></span>
+      <span id="syncLabel" data-i18n="synced">All data synced</span>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="farm-meta" id="farmMeta"></div>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main class="main">
+
+    <div class="offline-banner" id="offlineBanner" hidden>
+      <span data-i18n="offline_banner">Offline — changes will sync automatically</span>
+    </div>
+
+    <!-- FIELD STRIP: signature element — a cross-section of the field showing
+         soil-moisture depth banding + live NDVI canopy tint -->
+    <section class="field-strip-wrap">
+      <div class="field-strip" id="fieldStrip">
+        <div class="canopy" id="canopyLayer"></div>
+        <div class="strip-labels">
+          <span id="stripCrop">—</span>
+          <span id="stripStage">—</span>
+          <span id="stripDas">—</span>
+        </div>
+        <svg class="moisture-svg" id="moistureSvg" viewBox="0 0 1000 140" preserveAspectRatio="none"></svg>
+      </div>
+      <div class="twin-readouts" id="twinReadouts"></div>
+    </section>
+
+    <!-- RECOMMENDATION GRID -->
+    <section class="rec-grid" id="recGrid">
+      <!-- cards injected by app.js -->
+    </section>
+
+  </main>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="app.js"></script>
+</body>
+</html>
