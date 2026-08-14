@@ -1,0 +1,53 @@
+:root {
+  --soil: #221810;
+  --soil-2: #2c2015;
+  --panel: rgba(34, 24, 16, 0.94);
+  --paper: #f2ead9;
+  --wheat: #e6bd5e;
+  --wheat-dim: #b99a52;
+  --leaf: #7ea360;
+  --sky: #5288ab;
+  --rust: #c46a3f;
+  --text: #ece3d1;
+  --text-dim: #b9ab90;
+  --border: rgba(242, 234, 217, 0.14);
+  --gauge-track: rgba(242, 234, 217, 0.16);
+
+  --font-display: 'Space Grotesk', 'Segoe UI', sans-serif;
+  --font-accent: 'Fraunces', Georgia, serif;
+  --font-body: 'Inter', 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background: var(--soil);
+  color: var(--text);
+}
+
+h1, h2, h3, h4, h5 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--wheat);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
