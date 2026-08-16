@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AnnaDATA — Offline Edge Agronomist</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .recording-pulse {
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+      50% { transform: scale(1.05); box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col items-center justify-center p-4">
+
+  <div class="w-full max-w-2xl bg-slate-800 border border-slate-700 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
+    
+    <!-- Header -->
+    <div class="flex items-center justify-between border-b border-slate-700 pb-4">
+      <div>
+        <h1 class="text-2xl font-bold text-emerald-400 flex items-center gap-2">
+          🌾 AnnaDATA Edge
+        </h1>
+        <p class="text-xs text-slate-400">100% Offline Regional Agricultural Assistant</p>
+      </div>
+      <div class="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1.5 rounded-full">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+        <span class="text-xs font-semibold text-emerald-400">Offline Engine Ready</span>
+      </div>
+    </div>
+
+    <!-- Language Selector -->
+    <div class="flex items-center justify-between bg-slate-900/60 p-3 rounded-2xl border border-slate-700">
+      <label for="langSelect" class="text-sm font-medium text-slate-300">Select Dialect / Language:</label>
+      <select id="langSelect" class="bg-slate-800 text-slate-200 text-sm border border-slate-600 rounded-xl px-3 py-1.5 focus:outline-none focus:border-emerald-500">
+        <option value="od-IN">Odia (ଓଡ଼ିଆ)</option>
+        <option value="hi-IN" selected>Hindi (हिन्दी)</option>
+        <option value="bn-IN">Bengali (বাংলা)</option>
+        <option value="te-IN">Telugu (తెలుగు)</option>
+        <option value="ta-IN">Tamil (தமிழ்)</option>
+        <option value="en-IN">English</option>
+      </select>
+    </div>
+
+    <!-- Live Status Box -->
+    <div id="statusBox" class="text-center py-2 text-sm text-slate-400">
+      Tap the mic button and state your crop problem
+    </div>
+
+    <!-- Big Mic Action Button -->
+    <div class="flex flex-col items-center justify-center py-4">
+      <button id="recordBtn" class="w-24 h-24 rounded-full bg-emerald-500 hover:bg-emerald-600 active:scale-95 transition flex items-center justify-center shadow-lg shadow-emerald-500/30 cursor-pointer">
+        <!-- Microphone SVG -->
+        <svg id="micIcon" class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 003-3V5a3 3 0 10-6 0v6a3 3 0 003 3z" />
+        </svg>
+      </button>
+      <span id="btnLabel" class="text-xs font-semibold text-slate-400 mt-3 uppercase tracking-wider">Tap to Record</span>
+    </div>
+
+    <!-- Output Section -->
+    <div class="space-y-4">
+      <!-- Farmer Query Transcript -->
+      <div class="bg-slate-900/80 rounded-2xl p-4 border border-slate-700/80">
+        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Farmer Said (STT):</div>
+        <p id="transcriptionText" class="text-slate-200 text-sm italic min-h-[1.5rem]">Awaiting voice input...</p>
+      </div>
+
+      <!-- AI Agronomy Advisory Output -->
+      <div class="bg-emerald-950/30 border border-emerald-500/30 rounded-2xl p-5 shadow-inner">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold text-emerald-400 uppercase tracking-wide">Offline AI Advisory:</span>
+          <button id="replayVoiceBtn" class="hidden text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded-lg transition items-center gap-1">
+            🔊 Replay Speech
+          </button>
+        </div>
+        <p id="advisoryText" class="text-slate-100 text-base leading-relaxed">
+          The offline agronomy recommendation will appear here in your chosen regional language.
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const recordBtn = document.getElementById('recordBtn');
+    const micIcon = document.getElementById('micIcon');
+    const btnLabel = document.getElementById('btnLabel');
+    const statusBox = document.getElementById('statusBox');
+    const transcriptionText = document.getElementById('transcriptionText');
+    const advisoryText = document.getElementById('advisoryText');
+    const langSelect = document.getElementById('langSelect');
+    const replayVoiceBtn = document.getElementById('replayVoiceBtn');
+
+    let mediaRecorder;
+    let audioChunks = [];
+    let isRecording = false;
+    let latestAdvisoryText = "";
+
+    recordBtn.addEventListener('click', async () => {
+      if (!isRecording) {
+        startRecording();
+      } else {
+        stopRecording();
+      }
+    });
+
+    async function startRecording() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) audioChunks.push(event.data);
+        };
+
+        mediaRecorder.onstop = sendAudioToOfflineServer;
+
+        mediaRecorder.start();
+        isRecording = true;
+
+        recordBtn.classList.remove('bg-emerald-500', 'hover:bg-emerald-600');
+        recordBtn.classList.add('bg-red-500', 'recording-pulse');
+        btnLabel.innerText = "Recording... Tap to Stop";
+        statusBox.innerText = "Listening to farmer's voice...";
+        statusBox.classList.add('text-red-400');
+      } catch (err) {
+        alert("Microphone access denied: " + err);
+      }
+    }
+
+    function stopRecording() {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+        mediaRecorder.stream.getTracks().forEach(t => t.stop());
+      }
+      isRecording = false;
+      recordBtn.classList.remove('bg-red-500', 'recording-pulse');
+      recordBtn.classList.add('bg-emerald-500', 'hover:bg-emerald-600');
+      btnLabel.innerText = "Tap to Record";
+      statusBox.innerText = "Processing locally through Whisper & Qwen 2.5...";
+      statusBox.classList.remove('text-red-400');
+    }
+
+    async function sendAudioToOfflineServer() {
+      const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+      const formData = new FormData();
+      formData.append('file', audioBlob, 'farmer_voice.wav');
+
+      const selectedLang = langSelect.value;
+
+      try {
+        const response = await fetch(`/api/v1/voice/offline-consult?target_lang=${selectedLang}`, {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.status === 'success') {
+          transcriptionText.innerText = `"${data.farmer_query}"`;
+          advisoryText.innerText = data.advisory_regional;
+          latestAdvisoryText = data.advisory_regional;
+          statusBox.innerText = "Advisory generated successfully!";
+
+          // Trigger local offline text-to-speech
+          speakOffline(data.advisory_regional, selectedLang);
+          replayVoiceBtn.classList.remove('hidden');
+        } else {
+          statusBox.innerText = "Error: Could not process speech.";
+        }
+      } catch (err) {
+        statusBox.innerText = "Offline server connection error: " + err.message;
+      }
+    }
+
+    function speakOffline(text, langCode) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = langCode;
+        utterance.rate = 0.95; // Slightly slower for clear regional dialect listening
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    replayVoiceBtn.addEventListener('click', () => {
+      if (latestAdvisoryText) {
+        speakOffline(latestAdvisoryText, langSelect.value);
+      }
+    });
+  </script>
+</body>
+</html>

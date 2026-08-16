@@ -1,0 +1,11 @@
+fastapi>=0.110.0
+uvicorn>=0.28.0
+torch>=2.2.0
+torchaudio>=2.2.0
+transformers>=4.38.0
+soundfile>=0.12.1
+numpy>=1.26.0
+onnxruntime>=1.17.0
+ollama>=0.1.7
+gTTS>=2.5.1
+python-multipart>=0.0.9
