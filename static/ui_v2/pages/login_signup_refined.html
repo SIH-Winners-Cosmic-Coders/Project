@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <style>
+    @layer base {
+      html, body { width: 100vw; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+      body { overscroll-behavior: none; background-color: #faf9f5; }
+      .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
+      .pt-safe { padding-top: env(safe-area-inset-top, 0px); }
+    }
+  </style>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script id="tailwind-config">
+    tailwind.config={darkMode:"class",theme:{extend:{"colors":{"on-secondary-fixed-variant":"#79300e","inverse-primary":"#a1d1b8","surface-dim":"#dbdad6","on-primary":"#ffffff","primary":"#023625","primary-container":"#1f4d3a","surface-bright":"#faf9f5","on-secondary-container":"#772f0c","outline":"#717973","tertiary-fixed":"#ffdcbd","background":"#faf9f5","on-secondary-fixed":"#370e00","error":"#ba1a1a","secondary-fixed":"#ffdbce","secondary-fixed-dim":"#ffb598","surface-container-highest":"#e3e2df","primary-fixed-dim":"#a1d1b8","secondary":"#974723","surface-tint":"#3a6753","outline-variant":"#c0c9c2","on-surface":"#1b1c1a","tertiary":"#462702","surface-container-low":"#f4f4f0","primary-fixed":"#bceed3","on-background":"#1b1c1a","tertiary-container":"#603d16","on-surface-variant":"#414944","surface-container-high":"#e9e8e4","tertiary-fixed-dim":"#f0bd8b","secondary-container":"#ff996e","inverse-on-surface":"#f2f1ed","on-primary-fixed":"#002114","on-tertiary-container":"#daa978","surface-container-lowest":"#ffffff","surface":"#faf9f5","inverse-surface":"#2f312e","error-container":"#ffdad6","on-tertiary-fixed":"#2c1600","on-secondary":"#ffffff","surface-variant":"#e3e2df","on-tertiary-fixed-variant":"#623f18","on-tertiary":"#ffffff","on-error":"#ffffff","on-primary-container":"#8dbda4","on-primary-fixed-variant":"#214f3c","on-error-container":"#93000a","surface-container":"#efeeea"},"spacing":{"md":"16px","xs":"4px","xl":"32px","lg":"24px","safe-margin":"20px","gutter":"12px","sm":"8px","base":"4px"}}}}
+  </script>
+</head>
+<body class="bg-surface pt-safe pb-safe">
+  
+  <div id="splash-screen" class="fixed inset-0 z-[9999] bg-primary flex flex-col items-center justify-center transition-opacity duration-700">
+    <div class="relative flex flex-col items-center justify-center h-32 w-32">
+      <span id="splash-leaf" class="material-symbols-outlined text-[#a1d1b8] text-[72px] absolute bottom-10 scale-0 origin-bottom transition-transform duration-1000 ease-out" style="font-variation-settings: 'FILL' 1;">eco</span>
+      <span id="splash-hands" class="material-symbols-outlined text-white text-[64px] absolute bottom-0 translate-y-12 opacity-0 transition-all duration-700 ease-out">volunteer_activism</span>
+    </div>
+    <h2 id="splash-text" class="text-white mt-4 font-bold tracking-widest uppercase text-sm opacity-0 transition-opacity duration-700 delay-500">AnnaDATA</h2>
+  </div>
+
+  <main class="relative w-full">
+    <div class="flex flex-col w-full min-h-screen bg-surface font-sans">
+      
+      <div class="relative w-full h-[30vh] min-h-[260px] bg-gradient-to-b from-primary-container/20 to-surface flex flex-col items-center justify-center overflow-hidden">
+        <div class="absolute top-4 right-4 z-20">
+          <div class="relative inline-block shadow-sm">
+            <select class="appearance-none bg-white/90 backdrop-blur-md border border-surface-variant rounded-full px-4 py-1.5 text-[11px] font-bold text-on-surface-variant focus:outline-none focus:border-primary-container cursor-pointer pr-8 tracking-wider">
+              <option value="en">🌐 English</option>
+              <option value="hi">🌐 हिंदी</option>
+              <option value="od">🌐 ଓଡ଼ିଆ</option>
+            </select>
+            <span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-outline pointer-events-none text-[18px]">expand_more</span>
+          </div>
+        </div>
+        <div class="absolute inset-0 bg-[url('placeholder')] bg-cover bg-center opacity-10 mix-blend-overlay"></div>
+        <!-- Perfect Circular Logo for Login -->
+<div class="relative z-10 w-28 h-28 mb-6 mt-6 rounded-full border-[3px] border-primary flex items-center justify-center bg-white overflow-hidden shadow-lg mx-auto">
+  <img alt="AnnaDATA Logo" class="absolute w-[160%] h-[160%] max-w-none object-cover object-center mix-blend-multiply" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA10AUboxAwj9z5Uu8l1i4T1ZxyKuolDz_ThrcUpOWOfI7CwgEKYMAQIvnw4HDFU_2iP_2IwasTFAQ9504NOhGOc69d84Gyd_bi576CbVPrEzd0GaNAh7QGmnAySq0MDQn72_FEdTVQ8S1PEP0jMUT3TWlO4FVZ3TQTns8wrs6gIyjd2ND9jno0EfN6hFqPLF42XVoBe1VBrT2UPzUazhpdvZJOcLmKTuH6dvI9lDTCDBfS4BUiXzHbmF2PqOWsRfCHAYE">
+</div>
+        <h1 class="relative z-10 text-[24px] font-bold text-on-surface text-center px-6 leading-tight">Welcome to AnnaDATA</h1>
+        <p class="relative z-10 mt-1.5 text-[14px] text-on-surface-variant text-center px-6 max-w-sm">Your farm's digital twin. Monitor, analyze, and thrive.</p>
+      </div>
+
+      <div class="flex-1 w-full bg-surface-container-lowest rounded-t-[32px] -mt-4 relative z-20 shadow-[0px_-8px_32px_rgba(31,77,58,0.06)] flex flex-col px-6 pt-8 pb-8 max-w-md mx-auto border-x border-surface-dim/20">
+        
+        <div class="flex w-full bg-surface-container-low rounded-full p-1 mb-8 relative shadow-inner">
+          <div class="absolute top-1 bottom-1 w-[calc(50%-4px)] bg-white rounded-full shadow-sm transition-transform duration-300 ease-out transform translate-x-0" id="tab-indicator"></div>
+          <button class="flex-1 relative z-10 py-2 text-[12px] font-bold tracking-wider text-on-surface text-center focus:outline-none" id="tab-login" onclick="switchTab('login')">LOGIN</button>
+          <button class="flex-1 relative z-10 py-2 text-[12px] font-bold tracking-wider text-on-surface-variant text-center focus:outline-none" id="tab-signup" onclick="switchTab('signup')">SIGNUP</button>
+        </div>
+
+        <!-- Login Form -->
+        <div class="flex flex-col flex-1 transition-opacity duration-300 opacity-100" id="form-login">
+          <div class="space-y-4">
+            <div>
+              <label class="block text-[11px] font-bold tracking-wider text-on-surface-variant mb-1 ml-1" for="login-identifier">PHONE OR EMAIL</label>
+              <div class="relative">
+                <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-[20px]">contact_phone</span>
+                <input class="w-full bg-surface rounded-xl pl-11 pr-4 py-3 text-[15px] text-on-surface outline-none border border-surface-dim focus:border-primary-container transition-colors font-medium" id="login-identifier" placeholder="+91 98765 43210" type="text">
+              </div>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold tracking-wider text-on-surface-variant mb-1 ml-1" for="login-password">PASSWORD</label>
+              <div class="relative">
+                <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-[20px]">lock</span>
+                <input class="w-full bg-surface rounded-xl pl-11 pr-20 py-3 text-[15px] text-on-surface outline-none border border-surface-dim focus:border-primary-container transition-colors font-medium" id="login-password" placeholder="••••••••" type="password">
+                <button class="absolute right-3 top-1/2 -translate-y-1/2 text-primary font-bold text-[11px] tracking-wider hover:text-primary-container">FORGOT?</button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mt-8 space-y-3">
+            <button onclick="goToDashboard()" class="w-full bg-primary-container text-on-primary rounded-xl py-3.5 text-[15px] font-bold shadow-[0px_4px_16px_rgba(31,77,58,0.2)] active:scale-[0.98] transition-transform flex items-center justify-center gap-2">
+              Login Securely
+              <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">arrow_right_alt</span>
+            </button>
+            <button onclick="handleRequestOTP()" class="w-full border-2 border-primary-container text-primary-container bg-transparent rounded-xl py-3 text-[15px] font-bold active:scale-[0.98] transition-transform flex items-center justify-center gap-2">
+              Login with OTP
+              <span class="material-symbols-outlined text-[20px]">message</span>
+            </button>
+          </div>
+          
+          <div class="mt-auto pt-6 text-center">
+            <button onclick="goToDashboard()" class="text-tertiary-container text-[14px] font-bold border-b border-tertiary-container pb-0.5 hover:text-tertiary transition-colors">
+              Continue as Guest
+            </button>
+          </div>
+        </div>
+
+        <!-- Signup Form -->
+        <div class="flex flex-col flex-1 hidden opacity-0 transition-opacity duration-300" id="form-signup">
+          <div class="space-y-4 overflow-y-auto pr-1 pb-4" style="max-height: 40vh;">
+            
+            <!-- ADDED: Profile Photo Uploader -->
+            <div class="flex justify-center mb-2 mt-2">
+              <input type="file" id="signup-photo-input" accept="image/*" class="hidden" onchange="previewSignupPhoto(event)">
+              <label for="signup-photo-input" class="relative w-24 h-24 rounded-full bg-surface-container flex flex-col items-center justify-center border-2 border-dashed border-primary/40 cursor-pointer overflow-hidden group hover:border-primary transition-colors">
+                <img id="signup-photo-preview" src="" class="w-full h-full object-cover hidden absolute inset-0 z-10">
+                <div id="signup-photo-placeholder" class="flex flex-col items-center justify-center text-primary/60 group-hover:text-primary transition-colors">
+                  <span class="material-symbols-outlined text-[32px]">add_a_photo</span>
+                  <span class="text-[9px] font-bold mt-1 uppercase tracking-wider">Upload</span>
+                </div>
+              </label>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-bold tracking-wider text-on-surface-variant mb-1 ml-1" for="signup-name">FULL NAME</label>
+              <div class="relative">
+                <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-[20px]">person</span>
+                <input class="w-full bg-surface rounded-xl pl-11 pr-4 py-3 text-[15px] text-on-surface outline-none border border-surface-dim focus:border-primary-container transition-colors font-medium" id="signup-name" placeholder="Ramesh Kumar" type="text">
+              </div>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold tracking-wider text-on-surface-variant mb-1 ml-1" for="signup-phone">PHONE NUMBER</label>
+              <div class="relative">
+                <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-[20px]">phone_iphone</span>
+                <input class="w-full bg-surface rounded-xl pl-11 pr-4 py-3 text-[15px] text-on-surface outline-none border border-surface-dim focus:border-primary-container transition-colors font-medium" id="signup-phone" placeholder="+91" type="tel">
+              </div>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold tracking-wider text-on-surface-variant mb-1 ml-1" for="signup-location">FARM LOCATION</label>
+              <div class="relative">
+                <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-[20px]">pin_drop</span>
+                <input class="w-full bg-surface rounded-xl pl-11 pr-12 py-3 text-[15px] text-on-surface outline-none border border-surface-dim focus:border-primary-container transition-colors font-medium" id="signup-location" placeholder="e.g. Pune, Maharashtra" type="text">
+                <button class="absolute right-3.5 top-1/2 -translate-y-1/2 text-primary">
+                  <span class="material-symbols-outlined text-[20px]">my_location</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mt-4 pt-4 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest to-transparent relative z-10">
+            <button onclick="goToDashboard()" class="w-full bg-primary-container text-on-primary rounded-xl py-3.5 text-[15px] font-bold shadow-[0px_4px_16px_rgba(31,77,58,0.2)] active:scale-[0.98] transition-transform flex items-center justify-center gap-2">
+              Create Account
+              <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">how_to_reg</span>
+            </button>
+            <p class="text-center text-[11px] font-bold text-on-surface-variant mt-3">
+              By signing up, you agree to our <a class="text-primary underline" href="#">Terms</a> & <a class="text-primary underline" href="#">Privacy</a>.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // --- 0. Profile Image Logic ---
+    let signupBase64Image = null;
+    
+    function previewSignupPhoto(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          signupBase64Image = e.target.result;
+          const previewImg = document.getElementById('signup-photo-preview');
+          previewImg.src = signupBase64Image;
+          previewImg.classList.remove('hidden');
+          document.getElementById('signup-photo-placeholder').style.opacity = '0'; // Hide text/icon
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // --- 1. Splash Animation Logic ---
+    setTimeout(() => {
+      const splash = document.getElementById('splash-screen');
+      const hands = document.getElementById('splash-hands');
+      const leaf = document.getElementById('splash-leaf');
+      const text = document.getElementById('splash-text');
+
+      if (splash && hands && leaf && text) {
+        setTimeout(() => hands.classList.remove('translate-y-12', 'opacity-0'), 100);
+        setTimeout(() => {
+          leaf.classList.remove('scale-0');
+          leaf.classList.add('scale-100');
+          text.classList.remove('opacity-0');
+        }, 600);
+        setTimeout(() => {
+          splash.classList.add('opacity-0', 'pointer-events-none');
+          setTimeout(() => splash.remove(), 700);
+        }, 2000);
+      } else if (splash) {
+        splash.style.display = 'none'; 
+      }
+    }, 50);
+
+    // --- 2. Tab Switching Logic ---
+    function switchTab(tabName) {
+      const loginBtn = document.getElementById('tab-login');
+      const signupBtn = document.getElementById('tab-signup');
+      const indicator = document.getElementById('tab-indicator');
+      const formLogin = document.getElementById('form-login');
+      const formSignup = document.getElementById('form-signup');
+
+      if (tabName === 'login') {
+        loginBtn.classList.replace('text-on-surface-variant', 'text-on-surface');
+        signupBtn.classList.replace('text-on-surface', 'text-on-surface-variant');
+        indicator.classList.replace('translate-x-[calc(100%+8px)]', 'translate-x-0');
+
+        formSignup.classList.replace('opacity-100', 'opacity-0');
+        setTimeout(() => {
+          formSignup.classList.add('hidden');
+          formLogin.classList.remove('hidden');
+          setTimeout(() => formLogin.classList.replace('opacity-0', 'opacity-100'), 10);
+        }, 300);
+      } else {
+        signupBtn.classList.replace('text-on-surface-variant', 'text-on-surface');
+        loginBtn.classList.replace('text-on-surface', 'text-on-surface-variant');
+        indicator.classList.replace('translate-x-0', 'translate-x-[calc(100%+8px)]');
+
+        formLogin.classList.replace('opacity-100', 'opacity-0');
+        setTimeout(() => {
+          formLogin.classList.add('hidden');
+          formSignup.classList.remove('hidden');
+          setTimeout(() => formSignup.classList.replace('opacity-0', 'opacity-100'), 10);
+        }, 300);
+      }
+    }
+
+    // --- 3. Routing & Profile Sync Logic ---
+    function goToDashboard() {
+      const formSignup = document.getElementById('form-signup');
+      const isSignup = formSignup && !formSignup.classList.contains('hidden');
+      
+      if (isSignup) {
+        const name = document.getElementById('signup-name').value || "Swayam Swastik Sahoo";
+        const phone = document.getElementById('signup-phone').value || "+91 00000 00000";
+        const location = document.getElementById('signup-location').value || "Bhubaneswar, Odisha";
+        
+        // Save name, phone, location AND image
+        localStorage.setItem('annadata_user_profile', JSON.stringify({ name, phone, location, image: signupBase64Image }));
+      } else {
+        const phone = document.getElementById('login-identifier').value || "+91 00000 00000";
+        if (!localStorage.getItem('annadata_user_profile')) {
+          localStorage.setItem('annadata_user_profile', JSON.stringify({ 
+            name: "Swayam Swastik Sahoo", phone: phone, location: "Bhubaneswar, Odisha", image: null 
+          }));
+        }
+      }
+
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'navigate', target: 'home_dashboard' }, '*');
+      }
+    }
+
+    // --- 4. OTP Simulation ---
+    async function handleRequestOTP() {
+      const phoneInput = document.getElementById('login-identifier');
+      const targetPhone = phoneInput && phoneInput.value.trim() ? phoneInput.value.trim() : "9876543210";
+      const formData = new FormData();
+      formData.append("phone", targetPhone);
+
+      try {
+        const res = await fetch("/api/v1/auth/send-otp", { method: "POST", body: formData });
+        const data = await res.json();
+        if (data.status === "success") {
+          const enteredOtp = prompt(`[DEV Sandbox] Enter OTP sent to terminal (${data.dev_otp}):`);
+          if (enteredOtp) await handleVerifyOTP(targetPhone, enteredOtp);
+        } else {
+          alert(data.detail || "Could not send OTP.");
+        }
+      } catch (err) {
+        alert("Server error requesting OTP.");
+      }
+    }
+
+    async function handleVerifyOTP(phone, otp) {
+      const formData = new FormData();
+      formData.append("phone", phone);
+      formData.append("otp", otp);
+      try {
+        const res = await fetch("/api/v1/auth/verify-otp", { method: "POST", body: formData });
+        const data = await res.json();
+        if (data.status === "success") goToDashboard();
+        else alert(data.detail || "Invalid OTP");
+      } catch (err) {
+        alert("Server error verifying OTP.");
+      }
+    }
+  </script>
+</body>
+</html>

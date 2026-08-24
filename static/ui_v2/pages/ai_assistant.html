@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary":"#023625", "primary-container":"#1f4d3a", "surface":"#faf9f5",
+            "surface-dim":"#dbdad6", "surface-container":"#efeeea", "on-surface":"#1b1c1a",
+            "on-surface-variant":"#414944", "outline":"#717973", "error":"#ba1a1a",
+            "on-primary":"#ffffff", "on-primary-container":"#8dbda4",
+            "dark-surface":"#0f172a", "dark-card":"#1e293b", "dark-border":"#334155"
+          },
+          fontFamily: {
+            "headline-md": ["Plus Jakarta Sans"], "label-caps": ["Plus Jakarta Sans"], "body-lg": ["Plus Jakarta Sans"]
+          },
+          animation: {
+            'fade-in-zoom': 'fadeInZoom 0.4s ease-out forwards',
+          },
+          keyframes: {
+            fadeInZoom: {
+              '0%': { opacity: '0', transform: 'scale(0.97)' },
+              '100%': { opacity: '1', transform: 'scale(1)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style> 
+    html,body{width:100vw;margin:0;padding:0;font-family:'Plus Jakarta Sans',sans-serif;}
+    body{overscroll-behavior:none;} 
+    .pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}
+    .pt-safe{padding-top:env(safe-area-inset-top,0px);} 
+    ::-webkit-scrollbar{display:none;} 
+
+    /* AI VOICE VISUALIZER CSS */
+    @keyframes waveform {
+      0% { height: 4px; }
+      50% { height: 16px; }
+      100% { height: 4px; }
+    }
+    .waveform-bar { width: 4px; border-radius: 2px; animation: waveform 1.2s infinite ease-in-out; }
+    .waveform-bar:nth-child(1) { animation-delay: 0.0s; }
+    .waveform-bar:nth-child(2) { animation-delay: 0.2s; }
+    .waveform-bar:nth-child(3) { animation-delay: 0.4s; }
+    .waveform-bar:nth-child(4) { animation-delay: 0.6s; }
+    .waveform-bar:nth-child(5) { animation-delay: 0.8s; }
+  </style>
+  
+  <script>
+    function syncTheme() { document.documentElement.classList.toggle('dark', localStorage.theme === 'dark'); }
+    syncTheme(); window.addEventListener('storage', (e) => { if (e.key === 'theme') syncTheme(); });
+  </script>
+</head>
+<body class="bg-surface dark:bg-dark-surface font-body-lg text-on-surface dark:text-white transition-colors duration-300">
+  
+  <header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 dark:bg-dark-surface/90 backdrop-blur-xl border-b border-surface-dim/40 dark:border-dark-border shadow-sm transition-colors duration-300">
+    <div class="flex items-center justify-between h-16 px-5">
+      <a class="flex items-center gap-2 active:opacity-70 transition-opacity" onclick="window.parent.postMessage({type: 'navigate', target: 'home_dashboard'}, '*');" href="#">
+        <span class="material-symbols-outlined text-primary dark:text-[#a1d1b8] text-[28px]">arrow_back</span>
+        <span class="font-headline-md text-primary dark:text-[#a1d1b8] font-bold" id="ui-title">AnnaDATA AI</span>
+      </a>
+    </div>
+  </header>
+
+  <main class="relative w-full pt-16 pb-24 min-h-screen animate-fade-in-zoom transition-colors duration-300">
+    <div class="flex flex-col w-full h-full relative">
+      <div class="flex-1 overflow-y-auto px-5 pt-4 pb-[120px] flex flex-col gap-4" id="chat-container">
+        
+        <div class="flex items-start gap-2 mt-4 animate-fade-in">
+          <div class="w-10 h-10 rounded-full bg-primary-container dark:bg-[#334155] flex items-center justify-center shrink-0 shadow-sm border border-transparent dark:border-dark-border">
+            <span class="material-symbols-outlined text-on-primary-container dark:text-[#a1d1b8]" style="font-variation-settings: 'FILL' 1;">psychiatry</span>
+          </div>
+          <div class="flex flex-col gap-2 max-w-[90%] w-full">
+            <div class="bg-surface-container dark:bg-dark-card rounded-2xl rounded-tl-sm p-4 shadow-sm border border-transparent dark:border-dark-border">
+              <p class="font-body-lg text-on-surface dark:text-gray-100" id="ui-greeting">ନମସ୍କାର! ଆଜି ମୁଁ ଆପଣଙ୍କ ଚାଷରେ କିପରି ସାହାଯ୍ୟ କରିପାରିବି?</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="fixed bottom-0 left-0 w-full bg-surface/90 dark:bg-dark-surface/90 backdrop-blur-xl pt-3 pb-5 px-5 shadow-[0_-8px_32px_rgba(31,77,58,0.08)] dark:shadow-none z-10 border-t border-surface-dim/40 dark:border-dark-border transition-colors duration-300">
+        <div class="bg-surface-container dark:bg-dark-card rounded-[24px] p-2 flex items-end gap-2 border border-surface-dim dark:border-dark-border focus-within:border-primary dark:focus-within:border-[#a1d1b8] focus-within:ring-1 focus-within:ring-primary dark:focus-within:ring-[#a1d1b8] transition-all">
+          <button id="camera-btn" aria-label="Camera" class="w-11 h-11 shrink-0 rounded-full bg-surface-variant dark:bg-[#334155] flex items-center justify-center text-on-surface-variant dark:text-gray-300 hover:bg-primary dark:hover:bg-[#a1d1b8] hover:text-white dark:hover:text-black transition-colors cursor-pointer">
+            <span class="material-symbols-outlined text-[24px]">photo_camera</span>
+          </button>
+          
+          <textarea id="chat-input" class="w-full bg-transparent border-none focus:ring-0 p-2.5 font-body-lg text-on-surface dark:text-white placeholder:text-outline dark:placeholder:text-gray-500 resize-none max-h-32 min-h-[44px] outline-none" placeholder="ମେସେଜ୍ ଲେଖନ୍ତୁ କିମ୍ବା ମାଇକ୍ ଟ୍ୟାପ୍ କରନ୍ତୁ..." rows="1"></textarea>
+          
+          <button id="action-btn" data-mode="voice" aria-label="Voice Input" class="w-11 h-11 shrink-0 rounded-full bg-primary dark:bg-[#10b981] text-on-primary dark:text-black flex items-center justify-center shadow-md cursor-pointer transition-all hover:scale-105">
+            <span class="material-symbols-outlined text-[24px] transition-transform" id="action-icon" style="font-variation-settings: 'FILL' 1;">mic</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const chatContainer = document.getElementById('chat-container');
+      const actionBtn = document.getElementById('action-btn');
+      const actionIcon = document.getElementById('action-icon');
+      const cameraBtn = document.getElementById('camera-btn');
+      const chatInput = document.getElementById('chat-input');
+
+      const i18n = {
+        en: { title: "AnnaDATA AI", greeting: "Namaste! How can I help you with your farm today?", placeholder: "Type a message or tap Mic...", playAudio: "Play Audio", processing: "Processing..." },
+        hi: { title: "अन्नदाता एआई", greeting: "नमस्ते! आज मैं आपके खेत के लिए कैसे मदद कर सकता हूँ?", placeholder: "संदेश लिखें या माइक टैप करें...", playAudio: "ऑडियो चलाएं", processing: "प्रसंस्करण..." },
+        od: { title: "ଅନ୍ନଦାତା ଏଆଇ", greeting: "ନମସ୍କାର! ଆଜି ମୁଁ ଆପଣଙ୍କ ଚାଷରେ କିପରି ସାହାଯ୍ୟ କରିପାରିବି?", placeholder: "ମେସେଜ୍ ଲେଖନ୍ତୁ କିମ୍ବା ମାଇକ୍ ଟ୍ୟାପ୍ କରନ୍ତୁ...", playAudio: "ଅଡିଓ ଚଲାନ୍ତୁ", processing: "ପ୍ରକ୍ରିୟାକରଣ..." }
+      };
+
+      let currentGlobalLang = localStorage.getItem('annadata_global_lang') || 'od';
+
+      function syncUiLanguage() {
+        const freshLang = localStorage.getItem('annadata_global_lang') || 'od';
+        currentGlobalLang = freshLang;
+        document.getElementById('ui-title').innerText = i18n[freshLang].title || "AnnaDATA AI";
+        document.getElementById('ui-greeting').innerText = i18n[freshLang].greeting || i18n['en'].greeting;
+        chatInput.placeholder = i18n[freshLang].placeholder || i18n['en'].placeholder;
+      }
+
+      syncUiLanguage();
+
+      window.addEventListener('storage', (e) => {
+        if (e.key === 'annadata_global_lang') syncUiLanguage();
+      });
+      
+      window.playAudioAnim = function(url, btnElement) {
+        const audio = new Audio(url);
+        const container = btnElement.parentElement;
+        
+        const waveHtml = `<div class="flex items-center justify-center gap-1 h-4 ml-2" id="wave-${Date.now()}">
+          <div class="waveform-bar bg-primary dark:bg-[#a1d1b8]"></div>
+          <div class="waveform-bar bg-primary dark:bg-[#a1d1b8]"></div>
+          <div class="waveform-bar bg-primary dark:bg-[#a1d1b8]"></div>
+          <div class="waveform-bar bg-primary dark:bg-[#a1d1b8]"></div>
+          <div class="waveform-bar bg-primary dark:bg-[#a1d1b8]"></div>
+        </div>`;
+        
+        btnElement.style.display = 'none';
+        container.insertAdjacentHTML('afterbegin', waveHtml);
+        const waveElement = container.firstElementChild;
+        
+        audio.play();
+        audio.onended = () => {
+          waveElement.remove();
+          btnElement.style.display = 'flex';
+        };
+        audio.onerror = () => {
+          waveElement.remove();
+          btnElement.style.display = 'flex';
+          alert("Audio playback failed.");
+        };
+      }
+
+      function getProfileContext() {
+        let name = "Farmer"; let location = "Unknown Location"; let farm_size = "15 Acres"; let crop = "Sugarcane";
+        const savedProfile = localStorage.getItem('annadata_user_profile');
+        if (savedProfile) {
+          try {
+            const p = JSON.parse(savedProfile);
+            if (p.name) name = p.name; if (p.location) location = p.location;
+            if (p.farm_size) farm_size = p.farm_size; if (p.crop) crop = p.crop;
+          } catch(e) {}
+        }
+        return { name, location, farm_size, crop };
+      }
+
+      chatInput.addEventListener('input', function() {
+        this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px';
+        if (this.value.trim().length > 0) { actionIcon.innerText = 'send'; actionBtn.setAttribute('data-mode', 'text'); } 
+        else { actionIcon.innerText = 'mic'; actionBtn.setAttribute('data-mode', 'voice'); this.style.height = '44px'; }
+      });
+
+      const hiddenFileInput = document.createElement('input');
+      hiddenFileInput.type = 'file'; hiddenFileInput.accept = 'image/*'; hiddenFileInput.style.display = 'none';
+      document.body.appendChild(hiddenFileInput);
+
+      let isRecording = false; let mediaRecorder; let audioChunks = [];
+
+      function appendMessage(sender, text, imageUrl = null, audioUrl = null) {
+        const msgDiv = document.createElement('div');
+        
+        if (sender === 'user') {
+          msgDiv.className = 'flex items-start gap-2 flex-row-reverse mt-4 animate-fade-in';
+          let content = imageUrl ? `<img src="${imageUrl}" class="rounded-lg w-full max-h-48 object-cover mb-2">` : '';
+          content += text ? `<p class="font-body-lg">${text}</p>` : '';
+          
+          msgDiv.innerHTML = `
+            <div class="w-10 h-10 rounded-full bg-surface-variant dark:bg-[#334155] flex items-center justify-center shrink-0 shadow-sm overflow-hidden"><span class="material-symbols-outlined text-outline dark:text-gray-300">person</span></div>
+            <div class="flex flex-col gap-1 max-w-[85%] items-end"><div class="bg-primary dark:bg-[#10b981] text-on-primary dark:text-black rounded-2xl rounded-tr-sm p-4 shadow-sm">${content}</div></div>`;
+        } else {
+          msgDiv.className = 'flex items-start gap-2 mt-4 animate-fade-in';
+          let audioBtnHtml = audioUrl ? `
+            <div class="flex items-center gap-3 pt-2 mt-2 border-t border-surface-dim dark:border-dark-border min-h-[32px]">
+              <button onclick="playAudioAnim('${audioUrl}', this)" class="w-8 h-8 rounded-full bg-surface-variant dark:bg-[#334155] flex items-center justify-center shrink-0 hover:bg-surface-dim transition-colors"><span class="material-symbols-outlined text-on-surface-variant dark:text-gray-300 text-[18px]">volume_up</span></button>
+              <span class="font-label-caps text-on-surface-variant dark:text-gray-400 font-semibold uppercase">${i18n[currentGlobalLang].playAudio || 'Play Audio'}</span>
+            </div>` : '';
+
+          msgDiv.innerHTML = `
+            <div class="w-10 h-10 rounded-full bg-primary-container dark:bg-[#334155] flex items-center justify-center shrink-0 shadow-sm border border-transparent dark:border-dark-border"><span class="material-symbols-outlined text-on-primary-container dark:text-[#a1d1b8]" style="font-variation-settings: 'FILL' 1;">psychiatry</span></div>
+            <div class="flex flex-col gap-2 max-w-[90%] w-full"><div class="bg-surface-container dark:bg-dark-card rounded-2xl rounded-tl-sm p-4 shadow-sm border border-transparent dark:border-dark-border"><p class="font-body-lg text-on-surface dark:text-gray-100">${text}</p>${audioBtnHtml}</div></div>`;
+        }
+        chatContainer.appendChild(msgDiv);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }
+
+      actionBtn.addEventListener('click', async () => {
+        const mode = actionBtn.getAttribute('data-mode');
+        const ctx = getProfileContext();
+        
+        if (mode === 'text') {
+          const originalQuery = chatInput.value.trim();
+          const rawQueryLower = originalQuery.toLowerCase();
+          
+          if (!originalQuery) return;
+          
+          // Append the RAW text to the UI so it looks normal to the user
+          appendMessage('user', originalQuery);
+          chatInput.value = '';
+          chatInput.style.height = '44px';
+          actionIcon.innerText = 'mic';
+          actionBtn.setAttribute('data-mode', 'voice');
+          
+          // --- OFFLINE INTENT INTERCEPTOR ---
+          // Instantly answer local queries without calling backend APIs
+          if (rawQueryLower.includes("land size") || rawQueryLower.includes("acres") || rawQueryLower.includes("my farm") || rawQueryLower.includes("what crop")) {
+              setTimeout(() => {
+                  appendMessage('bot', `Based on your digital twin profile, you are currently farming ${ctx.crop} on exactly ${ctx.farm_size} in ${ctx.location}.`);
+              }, 400); 
+              return; 
+          }
+
+          chatInput.placeholder = i18n[currentGlobalLang].processing || "Processing...";
+
+          try {
+            const formData = new FormData();
+            
+            // System context injection
+            const smartQuery = `[SYSTEM FACT - User: ${ctx.name}. Location: ${ctx.location}. Farm Size: ${ctx.farm_size}. Crop: ${ctx.crop}. You MUST use these exact details if relevant to the question].\n\nQuestion: ${originalQuery}`;
+            
+            formData.append('query', smartQuery); 
+            formData.append('lang', currentGlobalLang);
+            
+            const res = await fetch(`/api/v1/text/chat`, { method: 'POST', body: formData });
+            const data = await res.json();
+            
+            if (data.status === 'success') {
+              const audioUrl = data.audio_file ? `/api/v1/voice/audio-stream?file=${encodeURIComponent(data.audio_file)}` : null;
+              appendMessage('bot', data.reply, null, audioUrl);
+            }
+          } catch (err) { appendMessage('bot', "Connection error."); } 
+          finally { chatInput.placeholder = i18n[currentGlobalLang].placeholder || "Type a message..."; }
+
+        } else {
+          if (!isRecording) {
+            try {
+              const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+              mediaRecorder = new MediaRecorder(stream);
+              audioChunks = [];
+              
+              mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+              mediaRecorder.onstop = async () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                chatInput.placeholder = i18n[currentGlobalLang].processing || "Processing...";
+                
+                const formData = new FormData();
+                formData.append('file', audioBlob, 'farmer_voice.wav');
+                
+                const queryParams = new URLSearchParams({ 
+                  lang: currentGlobalLang, temp: 32.8, moisture: 0.36, ndvi: 0.73, edge_mode: 'false',
+                  user_name: ctx.name, location: ctx.location, farm_size: ctx.farm_size, crop: ctx.crop            
+                });
+
+                try {
+                  const res = await fetch(`/api/v1/voice/hybrid-consult?${queryParams}`, { method: 'POST', body: formData });
+                  const data = await res.json();
+                  if (data.status === 'success') {
+                    appendMessage('user', data.farmer_query);
+                    const audioUrl = data.audio_file ? `/api/v1/voice/audio-stream?file=${encodeURIComponent(data.audio_file)}` : null;
+                    appendMessage('bot', data.advisory_regional, null, audioUrl);
+                  }
+                } catch (err) { appendMessage('bot', "Connection error."); } 
+                finally { chatInput.placeholder = i18n[currentGlobalLang].placeholder || "Type a message..."; }
+              };
+              
+              mediaRecorder.start(); isRecording = true;
+              actionBtn.style.backgroundColor = "#ba1a1a";
+              chatInput.placeholder = "Listening...";
+            } catch (err) { alert('Microphone access denied.'); }
+          } else {
+            mediaRecorder.stop(); isRecording = false; actionBtn.style.backgroundColor = ""; 
+          }
+        }
+      });
+
+      cameraBtn.addEventListener('click', () => hiddenFileInput.click());
+      hiddenFileInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0]; if (!file) return;
+        const objectUrl = URL.createObjectURL(file);
+        appendMessage('user', null, objectUrl);
+        chatInput.placeholder = i18n[currentGlobalLang].processing || "Processing...";
+
+        try {
+          const formData = new FormData();
+          formData.append('image', file, 'crop_scan.jpg'); formData.append('lang', currentGlobalLang);
+          const ctx = getProfileContext();
+          formData.append('context', `Name: ${ctx.name}, Location: ${ctx.location}, Farm Size: ${ctx.farm_size}, Crop: ${ctx.crop}`);
+          const res = await fetch(`/api/chat`, { method: 'POST', body: formData });
+          const data = await res.json();
+          if (data.status === 'success') appendMessage('bot', data.reply);
+        } catch (err) { appendMessage('bot', "Network error."); } 
+        finally { chatInput.placeholder = i18n[currentGlobalLang].placeholder || "Type a message..."; hiddenFileInput.value = ''; }
+      });
+    });
+  </script>
+</body>
+</html>

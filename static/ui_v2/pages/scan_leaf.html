@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <script id="tailwind-config">
+    tailwind.config={darkMode:"class",theme:{extend:{"colors":{"on-secondary-fixed-variant":"#79300e","inverse-primary":"#a1d1b8","surface-dim":"#dbdad6","on-primary":"#ffffff","primary":"#023625","primary-container":"#1f4d3a","surface-bright":"#faf9f5","on-secondary-container":"#772f0c","outline":"#717973","tertiary-fixed":"#ffdcbd","background":"#faf9f5","on-secondary-fixed":"#370e00","error":"#ba1a1a","secondary-fixed":"#ffdbce","secondary-fixed-dim":"#ffb598","surface-container-highest":"#e3e2df","primary-fixed-dim":"#a1d1b8","secondary":"#974723","surface-tint":"#3a6753","outline-variant":"#c0c9c2","on-surface":"#1b1c1a","tertiary":"#462702","surface-container-low":"#f4f4f0","primary-fixed":"#bceed3","on-background":"#1b1c1a","tertiary-container":"#603d16","on-surface-variant":"#414944","surface-container-high":"#e9e8e4","tertiary-fixed-dim":"#f0bd8b","secondary-container":"#ff996e","inverse-on-surface":"#f2f1ed","on-primary-fixed":"#002114","on-tertiary-container":"#daa978","surface-container-lowest":"#ffffff","surface":"#faf9f5","inverse-surface":"#2f312e","error-container":"#ffdad6","on-tertiary-fixed":"#2c1600","on-secondary":"#ffffff","surface-variant":"#e3e2df","on-tertiary-fixed-variant":"#623f18","on-tertiary":"#ffffff","on-error":"#ffffff","on-primary-container":"#8dbda4","on-primary-fixed-variant":"#214f3c","on-error-container":"#93000a","surface-container":"#efeeea"}}}}
+  </script>
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; overscroll-behavior: none; background-color: #000; }
+    ::-webkit-scrollbar { display: none; }
+    .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
+    .pt-safe { padding-top: env(safe-area-inset-top, 20px); }
+    
+    .viewfinder { position: relative; width: 280px; height: 280px; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5); border-radius: 16px; }
+    .bracket { position: absolute; width: 40px; height: 40px; border-color: #a1d1b8; border-style: solid; border-width: 0; }
+    .bracket-tl { top: -2px; left: -2px; border-top-width: 4px; border-left-width: 4px; border-top-left-radius: 16px; }
+    .bracket-tr { top: -2px; right: -2px; border-top-width: 4px; border-right-width: 4px; border-top-right-radius: 16px; }
+    .bracket-bl { bottom: -2px; left: -2px; border-bottom-width: 4px; border-left-width: 4px; border-bottom-left-radius: 16px; }
+    .bracket-br { bottom: -2px; right: -2px; border-bottom-width: 4px; border-right-width: 4px; border-bottom-right-radius: 16px; }
+
+    @keyframes scan { 0% { top: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+    .laser { position: absolute; left: 0; right: 0; height: 2px; background: #a1d1b8; box-shadow: 0 0 10px 2px #a1d1b8; animation: scan 2s infinite linear; display: none; }
+    .is-scanning .laser { display: block; }
+  </style>
+</head>
+<body class="relative w-full h-screen overflow-hidden text-on-surface">
+
+  <!-- CAMERA FEED -->
+  <video id="camera-feed" class="absolute inset-0 w-full h-full object-cover z-0" autoplay playsinline></video>
+  <canvas id="photo-canvas" class="hidden absolute inset-0 w-full h-full object-cover z-0"></canvas>
+
+  <!-- TOP HEADER -->
+  <header class="absolute top-0 w-full z-20 pt-safe flex justify-between items-center px-5 py-4 bg-gradient-to-b from-black/60 to-transparent">
+    <button onclick="goBack()" class="w-10 h-10 rounded-full bg-surface/20 backdrop-blur-md flex items-center justify-center text-white active:scale-95 transition">
+      <span class="material-symbols-outlined">arrow_back</span>
+    </button>
+    <button id="torch-btn" onclick="toggleTorch()" class="w-10 h-10 rounded-full bg-surface/20 backdrop-blur-md flex items-center justify-center text-white active:scale-95 transition">
+      <span class="material-symbols-outlined" id="torch-icon">flashlight_off</span>
+    </button>
+  </header>
+
+  <!-- VIEWFINDER OVERLAY -->
+  <div class="absolute inset-0 z-10 flex flex-col items-center justify-center pointer-events-none pb-20">
+    <div id="viewfinder" class="viewfinder transition-all duration-300">
+      <div class="bracket bracket-tl"></div>
+      <div class="bracket bracket-tr"></div>
+      <div class="bracket bracket-bl"></div>
+      <div class="bracket bracket-br"></div>
+      <div class="laser z-20"></div>
+    </div>
+    <p id="status-text" data-i18n="scanPrompt" class="text-white font-bold mt-6 bg-black/50 px-4 py-2 rounded-full backdrop-blur-md text-sm">Center the affected leaf</p>
+  </div>
+
+  <!-- BOTTOM CONTROLS -->
+  <div id="controls-bar" class="absolute bottom-0 w-full z-20 pb-safe pt-8 pb-8 flex items-center justify-center gap-12 bg-gradient-to-t from-black/80 via-black/50 to-transparent">
+    
+    <!-- Gallery Fallback -->
+    <button onclick="document.getElementById('gallery-input').click()" class="w-12 h-12 rounded-full bg-surface/20 backdrop-blur-md flex items-center justify-center text-white active:scale-95 transition">
+      <span class="material-symbols-outlined text-[24px]">photo_library</span>
+    </button>
+    <input type="file" id="gallery-input" accept="image/*" class="hidden" onchange="handleGalleryUpload(event)">
+    
+    <!-- Shutter Button -->
+    <button id="shutter-btn" onclick="captureAndScan()" class="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center active:scale-95 transition-transform">
+      <div class="w-[68px] h-[68px] bg-white rounded-full flex items-center justify-center shadow-inner">
+        <span class="material-symbols-outlined text-primary text-[32px]">document_scanner</span>
+      </div>
+    </button>
+    
+    <!-- Placeholder to balance flex layout -->
+    <div class="w-12 h-12"></div>
+  </div>
+
+  <!-- RESULT SLIDE-UP DRAWER -->
+  <div id="result-drawer" class="fixed bottom-0 left-0 w-full z-50 bg-surface rounded-t-[32px] shadow-[0_-8px_32px_rgba(0,0,0,0.2)] transform translate-y-full transition-transform duration-500 ease-out pb-safe">
+    <div class="w-full flex justify-center py-3">
+      <div class="w-12 h-1.5 bg-outline-variant rounded-full"></div>
+    </div>
+    <div class="px-6 pb-6 pt-2 flex flex-col gap-4">
+      
+      <div class="flex items-start justify-between">
+        <div>
+          <h2 data-i18n="analysisTitle" class="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1">Analysis Complete</h2>
+          <h3 id="diagnosis-title" class="text-xl font-bold text-primary">Scanning...</h3>
+        </div>
+        <div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-white shadow-sm shrink-0">
+          <span class="material-symbols-outlined text-[24px]">psychiatry</span>
+        </div>
+      </div>
+
+      <div class="bg-surface-container rounded-2xl p-4 border border-surface-dim">
+        <p id="diagnosis-desc" class="text-body-sm font-body-lg text-on-surface leading-relaxed">Processing image data...</p>
+      </div>
+
+      <div class="flex gap-3 mt-2">
+        <button onclick="resetScanner()" class="flex-1 bg-surface-container-highest text-on-surface font-bold py-3 rounded-xl active:scale-95 transition">
+          <span data-i18n="scanAgain">Scan Again</span>
+        </button>
+        <button onclick="askAIFollowUp()" class="flex-[2] bg-primary text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 active:scale-95 transition shadow-md">
+          <span class="material-symbols-outlined text-[20px]">chat</span>
+          <span data-i18n="askAiBtn">Ask AI Follow-up</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const i18nDict = {
+      en: { scanPrompt: "Center the affected leaf", analysisTitle: "Analysis Complete", scanAgain: "Retake", askAiBtn: "Ask AI Follow-up", processing: "Analyzing crop data..." },
+      hi: { scanPrompt: "प्रभावित पत्ती को केंद्र में रखें", analysisTitle: "विश्लेषण पूर्ण", scanAgain: "फिर से लें", askAiBtn: "एआई से पूछें", processing: "डेटा का विश्लेषण कर रहा है..." },
+      od: { scanPrompt: "ପ୍ରଭାବିତ ପତ୍ରକୁ ମଝିରେ ରଖନ୍ତୁ", analysisTitle: "ବିଶ୍ଳେଷଣ ସମ୍ପୂର୍ଣ୍ଣ", scanAgain: "ପୁଣି ସ୍କାନ୍ କରନ୍ତୁ", askAiBtn: "ଏଆଇ କୁ ପଚାରନ୍ତୁ", processing: "ତଥ୍ୟ ବିଶ୍ଳେଷଣ ହେଉଛି..." }
+    };
+    let currentLang = 'en';
+
+    function applyUiLanguage() {
+      currentLang = localStorage.getItem('annadata_global_lang') || 'od';
+      const dict = i18nDict[currentLang] || i18nDict['en'];
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (dict[key]) el.innerText = dict[key];
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', applyUiLanguage);
+    window.addEventListener('storage', (e) => { if (e.key === 'annadata_global_lang') applyUiLanguage(); });
+
+    const video = document.getElementById('camera-feed');
+    const canvas = document.getElementById('photo-canvas');
+    let mediaStream = null;
+    let imageTrack = null;
+    let isTorchOn = false;
+
+    async function initCamera() {
+      try {
+        // Fix: Removed 'environment' constraint to use the laptop webcam smoothly
+        mediaStream = await navigator.mediaDevices.getUserMedia({ 
+          video: true, 
+          audio: false 
+        });
+        video.srcObject = mediaStream;
+        imageTrack = mediaStream.getVideoTracks()[0];
+      } catch (err) {
+        console.error("Camera access denied:", err);
+        alert("Camera access is required to scan leaves.");
+      }
+    }
+    
+    initCamera();
+
+    async function toggleTorch() {
+      if (!imageTrack) return;
+      try {
+        const capabilities = imageTrack.getCapabilities();
+        if (!capabilities.torch) {
+          alert("Flashlight not supported on this device.");
+          return;
+        }
+        isTorchOn = !isTorchOn;
+        await imageTrack.applyConstraints({ advanced: [{ torch: isTorchOn }] });
+        document.getElementById('torch-icon').innerText = isTorchOn ? 'flashlight_on' : 'flashlight_off';
+      } catch (err) {
+        console.error("Torch error:", err);
+      }
+    }
+
+    async function captureAndScan() {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d').drawImage(video, 0, 0);
+      video.classList.add('hidden');
+      canvas.classList.remove('hidden');
+
+      document.getElementById('viewfinder').classList.add('is-scanning');
+      const dict = i18nDict[currentLang] || i18nDict['en'];
+      document.getElementById('status-text').innerText = dict.processing;
+      document.getElementById('controls-bar').classList.add('opacity-50', 'pointer-events-none');
+
+      canvas.toBlob(async (blob) => {
+        const formData = new FormData();
+        formData.append('image', blob, 'scan.jpg');
+        formData.append('lang', currentLang);
+        
+        try {
+          const res = await fetch('/api/chat', { method: 'POST', body: formData });
+          const data = await res.json();
+          showResult(data);
+        } catch (err) {
+          showResult({ status: 'error', reply: "Network connection failed. Please try again." });
+        }
+      }, 'image/jpeg', 0.8);
+    }
+
+    function handleGalleryUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const imgURL = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        canvas.getContext('2d').drawImage(img, 0, 0);
+        video.classList.add('hidden');
+        canvas.classList.remove('hidden');
+        
+        document.getElementById('viewfinder').classList.add('is-scanning');
+        document.getElementById('status-text').innerText = i18nDict[currentLang].processing;
+        
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('lang', currentLang);
+        
+        fetch('/api/chat', { method: 'POST', body: formData })
+          .then(res => res.json())
+          .then(data => showResult(data))
+          .catch(() => showResult({ status: 'error', reply: "Upload failed." }));
+      };
+      img.src = imgURL;
+    }
+
+    function showResult(data) {
+      document.getElementById('viewfinder').classList.remove('is-scanning');
+      document.getElementById('status-text').innerText = "";
+      
+      const titleEl = document.getElementById('diagnosis-title');
+      const descEl = document.getElementById('diagnosis-desc');
+      
+      if (data.status === 'success') {
+        titleEl.innerText = "Diagnosis Ready";
+        titleEl.className = "text-xl font-bold text-primary";
+        descEl.innerText = data.reply;
+      } else {
+        titleEl.innerText = "Scan Failed";
+        titleEl.className = "text-xl font-bold text-error";
+        descEl.innerText = data.reply;
+      }
+
+      document.getElementById('result-drawer').classList.remove('translate-y-full');
+    }
+
+    function resetScanner() {
+      document.getElementById('result-drawer').classList.add('translate-y-full');
+      canvas.classList.add('hidden');
+      video.classList.remove('hidden');
+      document.getElementById('controls-bar').classList.remove('opacity-50', 'pointer-events-none');
+      document.getElementById('status-text').innerText = (i18nDict[currentLang] || i18nDict['en']).scanPrompt;
+      document.getElementById('gallery-input').value = ""; 
+    }
+
+    function askAIFollowUp() {
+      goBack('ai_assistant');
+    }
+
+    function goBack(target = 'home_dashboard') {
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(track => track.stop());
+      }
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'navigate', target: target }, '*');
+      }
+    }
+  </script>
+</body>
+</html>

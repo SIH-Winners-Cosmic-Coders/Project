@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport">
+  <title>AnnaDATA Weather</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <script id="tailwind-config">
+    tailwind.config = { darkMode: "class", theme: { extend: { colors: { "primary":"#023625", "primary-container":"#1f4d3a", "surface":"#faf9f5", "surface-dim":"#dbdad6", "surface-container":"#efeeea", "on-surface":"#1b1c1a", "on-surface-variant":"#414944", "outline":"#717973", "error":"#ba1a1a", "dark-surface":"#0f172a", "dark-card":"#1e293b", "dark-border":"#334155", "secondary":"#974723" } } } }
+  </script>
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; overscroll-behavior: none; }
+    ::-webkit-scrollbar { display: none; }
+    .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
+    .pt-safe { padding-top: env(safe-area-inset-top, 20px); }
+  </style>
+</head>
+<body class="bg-surface dark:bg-dark-surface text-on-surface dark:text-white transition-colors duration-300 pb-28">
+
+  <header class="fixed top-0 w-full z-50 pt-safe bg-surface/90 dark:bg-dark-surface/90 backdrop-blur-xl border-b border-surface-dim/40 dark:border-dark-border transition-colors duration-300">
+    <div class="flex items-center justify-between h-16 px-5">
+      <div class="flex items-center gap-4">
+        <button onclick="window.parent.postMessage({type: 'navigate', target: 'home_dashboard'}, '*');" class="active:opacity-70 transition-opacity">
+          <span class="material-symbols-outlined text-primary dark:text-[#a1d1b8] text-[28px]">arrow_back</span>
+        </button>
+        <h1 class="text-xl font-bold text-primary dark:text-[#a1d1b8]" data-i18n="title">Microclimate</h1>
+      </div>
+      
+      <!-- STEP 3: Voice-First "Read Aloud" Button -->
+      <button onclick="readWeatherAloud()" id="read-aloud-btn" class="w-10 h-10 rounded-full bg-primary dark:bg-[#10b981] text-white dark:text-black flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-all">
+        <span class="material-symbols-outlined text-[20px]">volume_up</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="w-full pt-20 px-5 flex flex-col gap-5 relative z-10">
+    
+    <!-- STEP 4: Offline Survival Badge -->
+    <div id="offline-badge" class="hidden bg-secondary/10 border border-secondary/30 text-secondary dark:text-orange-400 p-3 rounded-xl flex items-center gap-2">
+      <span class="material-symbols-outlined text-[18px]">wifi_off</span>
+      <span class="text-xs font-bold" data-i18n="offlineMsg">Offline Mode: Showing last cached forecast.</span>
+    </div>
+
+    <!-- Main Weather Hero -->
+    <section class="bg-primary-container dark:bg-dark-card rounded-2xl p-6 shadow-lg text-white relative overflow-hidden">
+      <!-- Decorative background icon -->
+      <span class="material-symbols-outlined absolute -right-4 -bottom-4 text-[120px] opacity-10 pointer-events-none">partly_cloudy_day</span>
+      
+      <div class="flex justify-between items-start relative z-10">
+        <div>
+          <h2 id="location-name" class="text-sm font-bold text-on-primary-container dark:text-gray-400 uppercase tracking-wider mb-1">Locating Farm...</h2>
+          <div class="flex items-end gap-1">
+            <span id="current-temp" class="text-5xl font-extrabold">--</span>
+            <span class="text-2xl font-bold mb-1">°C</span>
+          </div>
+          <p id="weather-desc" class="text-sm mt-1 font-semibold text-primary-container-lowest">Analyzing Atmosphere...</p>
+        </div>
+        <div class="text-right">
+          <div class="flex items-center gap-1 justify-end text-sm mb-1">
+            <span class="material-symbols-outlined text-[16px]">water_drop</span>
+            <span id="current-humidity" class="font-bold">--%</span>
+          </div>
+          <div class="flex items-center gap-1 justify-end text-sm">
+            <span class="material-symbols-outlined text-[16px]">air</span>
+            <span id="current-wind" class="font-bold">-- km/h</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 1: Actionable Agronomic Alerts -->
+    <h3 class="text-sm font-bold text-on-surface-variant dark:text-gray-400 uppercase tracking-wider mt-2" data-i18n="aiAlerts">AI Agronomic Alerts</h3>
+    <div class="grid grid-cols-1 gap-3">
+      
+      <!-- Spraying Window -->
+      <div id="alert-spraying" class="bg-surface-container-lowest dark:bg-dark-card p-4 rounded-xl border-l-4 shadow-sm flex items-start gap-3 transition-colors">
+        <span id="icon-spraying" class="material-symbols-outlined text-[24px]">pest_control</span>
+        <div>
+          <h4 class="text-sm font-bold text-on-surface dark:text-white" data-i18n="sprayTitle">Spraying Window</h4>
+          <p id="desc-spraying" class="text-xs text-on-surface-variant dark:text-gray-400 mt-0.5 leading-snug">Calculating optimal window...</p>
+        </div>
+      </div>
+
+      <!-- Irrigation Need -->
+      <div id="alert-irrigation" class="bg-surface-container-lowest dark:bg-dark-card p-4 rounded-xl border-l-4 shadow-sm flex items-start gap-3 transition-colors">
+        <span id="icon-irrigation" class="material-symbols-outlined text-[24px]">water</span>
+        <div>
+          <h4 class="text-sm font-bold text-on-surface dark:text-white" data-i18n="irrigTitle">Irrigation Status</h4>
+          <p id="desc-irrigation" class="text-xs text-on-surface-variant dark:text-gray-400 mt-0.5 leading-snug">Analyzing precipitation data...</p>
+        </div>
+      </div>
+
+      <!-- Disease Risk -->
+      <div id="alert-disease" class="bg-surface-container-lowest dark:bg-dark-card p-4 rounded-xl border-l-4 shadow-sm flex items-start gap-3 transition-colors">
+        <span id="icon-disease" class="material-symbols-outlined text-[24px]">coronavirus</span>
+        <div>
+          <h4 class="text-sm font-bold text-on-surface dark:text-white" data-i18n="diseaseTitle">Disease Risk Index</h4>
+          <p id="desc-disease" class="text-xs text-on-surface-variant dark:text-gray-400 mt-0.5 leading-snug">Evaluating humidity thresholds...</p>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    const i18nDict = {
+      en: { title: "Microclimate", aiAlerts: "AI Agronomic Alerts", sprayTitle: "Spraying Window", irrigTitle: "Irrigation Status", diseaseTitle: "Disease Risk Index", offlineMsg: "Offline Mode: Showing last cached forecast." },
+      hi: { title: "सूक्ष्म जलवायु", aiAlerts: "एआई कृषि अलर्ट", sprayTitle: "छिड़काव का समय", irrigTitle: "सिंचाई की स्थिति", diseaseTitle: "रोग जोखिम सूचकांक", offlineMsg: "ऑफ़लाइन मोड: अंतिम सहेजा गया पूर्वानुमान।" },
+      od: { title: "ପାଣିପାଗ", aiAlerts: "ଏଆଇ କୃଷି ସୂଚନା", sprayTitle: "ସ୍ପ୍ରେ କରିବା ସମୟ", irrigTitle: "ଜଳସେଚନ ସ୍ଥିତି", diseaseTitle: "ରୋଗ ଆଶଙ୍କା", offlineMsg: "ଅଫଲାଇନ୍: ପୁରୁଣା ତଥ୍ୟ ଦେଖାଉଛି |" }
+    };
+
+    let latestWeatherState = null;
+
+    function applyLanguage() {
+      const lang = localStorage.getItem('annadata_global_lang') || 'en';
+      const dict = i18nDict[lang] || i18nDict['en'];
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        el.innerText = dict[el.getAttribute('data-i18n')];
+      });
+    }
+
+    // STEP 2: Hyper-Local Microclimate Targeting
+    async function loadWeatherData() {
+      const profileStr = localStorage.getItem('annadata_user_profile');
+      let lat = 20.2590; 
+      let lng = 85.7918; 
+      let locName = "Mapped Farm";
+
+      if(profileStr) {
+        try {
+          // Add this inside loadWeatherData() and fetchYieldPrediction() right after 'try {'
+if (localStorage.getItem('annadata_demo_offline') === 'true') throw new Error("Demo Offline Mode Triggered");
+            const profile = JSON.parse(profileStr);
+            if (profile.location) locName = profile.location;
+        } catch(e) {}
+      }
+      
+      document.getElementById('location-name').innerText = locName;
+
+      // UPGRADED API URL: Added 'hourly' arrays for temp, rain probability, and wind
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,soil_moisture_0_to_1cm,et0_fao_evapotranspiration&hourly=temperature_2m,precipitation_probability,wind_speed_10m&timezone=auto&forecast_days=2`;
+
+      try {
+        const response = await fetch(url);
+        if(!response.ok) throw new Error("Network error");
+        
+        const data = await response.json();
+        
+        // Isolate the next 12 hours dynamically
+        const currentHour = new Date().getHours();
+        let startIndex = data.hourly.time.findIndex(t => new Date(t).getHours() === currentHour && new Date(t).getDate() === new Date().getDate());
+        if(startIndex === -1) startIndex = 0; // Fallback
+
+        const hourlyArray = [];
+        for(let i = 0; i < 12; i++) {
+            const idx = startIndex + i;
+            if(idx < data.hourly.time.length) {
+                hourlyArray.push({
+                    time: new Date(data.hourly.time[idx]),
+                    temp: data.hourly.temperature_2m[idx],
+                    precipProb: data.hourly.precipitation_probability[idx],
+                    wind: data.hourly.wind_speed_10m[idx]
+                });
+            }
+        }
+
+        const weatherObj = {
+            temp: data.current.temperature_2m,
+            humidity: data.current.relative_humidity_2m,
+            wind: data.current.wind_speed_10m,
+            precip: data.current.precipitation,
+            soil_moisture: data.current.soil_moisture_0_to_1cm,
+            evapotranspiration: data.current.et0_fao_evapotranspiration,
+            hourly: hourlyArray // Attach the 12-hour array
+        };
+
+        localStorage.setItem('annadata_weather_cache', JSON.stringify(weatherObj));
+        document.getElementById('offline-badge').classList.add('hidden');
+        
+        updateUI(weatherObj);
+
+      } catch (error) {
+        console.warn("API failed, loading offline cache.");
+        document.getElementById('offline-badge').classList.remove('hidden');
+        const cached = localStorage.getItem('annadata_weather_cache');
+        if (cached) {
+            updateUI(JSON.parse(cached));
+        }
+      }
+    }
+
+    // STEP 1: Actionable Agronomic Alerts Logic
+    function updateUI(w) {
+      latestWeatherState = w;
+      
+      // Update Hero
+      document.getElementById('current-temp').innerText = w.temp.toFixed(0);
+      document.getElementById('current-humidity').innerText = `${w.humidity}%`;
+      document.getElementById('current-wind').innerText = `${w.wind} km/h`;
+      document.getElementById('weather-desc').innerText = w.precip > 0 ? "Rain Detected" : "Clear Conditions";
+
+      // Logic 1: Spraying Window (Wind > 15 or Rain)
+      const sprayEl = document.getElementById('alert-spraying');
+      const sprayIcon = document.getElementById('icon-spraying');
+      const sprayDesc = document.getElementById('desc-spraying');
+      if (w.wind > 15 || w.precip > 0) {
+        sprayEl.className = "bg-surface-container dark:bg-dark-card p-4 rounded-xl border-l-4 border-error shadow-sm flex items-start gap-3";
+        sprayIcon.className = "material-symbols-outlined text-[24px] text-error";
+        sprayDesc.innerText = "DO NOT SPRAY. High wind/rain will cause chemical drift and washoff.";
+        sprayDesc.classList.add('text-error');
+      } else {
+        sprayEl.className = "bg-surface-container dark:bg-dark-card p-4 rounded-xl border-l-4 border-[#10b981] shadow-sm flex items-start gap-3";
+        sprayIcon.className = "material-symbols-outlined text-[24px] text-[#10b981]";
+        sprayDesc.innerText = "OPTIMAL. Wind and moisture levels are safe for pesticide/herbicide application.";
+        sprayDesc.classList.remove('text-error');
+      }
+
+     // Upgraded Logic 2: Irrigation (Using Soil Moisture & ET0)
+      const irriEl = document.getElementById('alert-irrigation');
+      const irriIcon = document.getElementById('icon-irrigation');
+      const irriDesc = document.getElementById('desc-irrigation');
+      
+      if (w.precip > 0) {
+        irriEl.className = "bg-surface-container dark:bg-dark-card p-4 rounded-xl border-l-4 border-error shadow-sm flex items-start gap-3";
+        irriIcon.className = "material-symbols-outlined text-[24px] text-error";
+        irriDesc.innerText = "HALT IRRIGATION. Natural rainfall detected. Save electricity and pump fuel.";
+        irriDesc.classList.add('text-error');
+      } else if (w.soil_moisture < 0.25 || w.evapotranspiration > 5.0) {
+        // High water loss or dry topsoil
+        irriEl.className = "bg-surface-container dark:bg-dark-card p-4 rounded-xl border-l-4 border-secondary shadow-sm flex items-start gap-3";
+        irriIcon.className = "material-symbols-outlined text-[24px] text-secondary dark:text-orange-400";
+        irriDesc.innerText = "CRITICAL: WATER IMMEDIATELY. Soil moisture is critically low and evaporation rates are high.";
+        irriDesc.classList.add('text-secondary', 'dark:text-orange-400');
+      } else {
+        irriEl.className = "bg-surface-container dark:bg-dark-card p-4 rounded-xl border-l-4 border-[#10b981] shadow-sm flex items-start gap-3";
+        irriIcon.className = "material-symbols-outlined text-[24px] text-[#10b981]";
+        irriDesc.innerText = "OPTIMAL. Soil moisture is adequate. No immediate watering required.";
+        irriDesc.classList.remove('text-error', 'text-secondary', 'dark:text-orange-400');
+      }
+
+      // Logic 3: Disease Risk (Humidity > 75% & Temp > 25)
+      const disEl = document.getElementById('alert-disease');
+      const disIcon = document.getElementById('icon-disease');
+      const disDesc = document.getElementById('desc-disease');
+      if (w.humidity > 75 && w.temp > 25) {
+        disEl.className = "bg-surface-container dark:bg-dark-card p-4 rounded-xl border-l-4 border-secondary shadow-sm flex items-start gap-3";
+        disIcon.className = "material-symbols-outlined text-[24px] text-secondary dark:text-orange-400";
+        disDesc.innerText = "HIGH RISK. Hot, humid conditions are breeding grounds for Fungal Blight. Monitor crops closely.";
+        disDesc.classList.add('text-secondary', 'dark:text-orange-400');
+      } else {
+        disEl.className = "bg-surface-container dark:bg-dark-card p-4 rounded-xl border-l-4 border-[#10b981] shadow-sm flex items-start gap-3";
+        disIcon.className = "material-symbols-outlined text-[24px] text-[#10b981]";
+        disDesc.innerText = "LOW RISK. Current atmospheric conditions suppress major fungal growth.";
+        disDesc.classList.remove('text-secondary', 'dark:text-orange-400');
+      }
+      // Render the 12-Hour Slider
+      const slider = document.getElementById('hourly-slider');
+      if (slider && w.hourly) {
+        slider.innerHTML = '';
+        w.hourly.forEach((hourBlock, index) => {
+            // Format time (e.g., 2 PM). Show "Now" for the first block.
+            const timeLabel = index === 0 ? 'Now' : hourBlock.time.toLocaleTimeString([], {hour: 'numeric', hour12: true});
+            
+            // Smart Styling: Highlight risky hours in red
+            const isRisky = hourBlock.wind > 15 || hourBlock.precipProb > 40;
+            const borderClass = isRisky ? 'border-error/50 dark:border-red-500/50' : 'border-surface-dim dark:border-dark-border';
+            const bgClass = isRisky ? 'bg-error/5 dark:bg-red-900/10' : 'bg-surface-container-lowest dark:bg-dark-card';
+            
+            const cardHtml = `
+                <div class="min-w-[85px] snap-start flex flex-col items-center justify-center p-3 rounded-xl border ${borderClass} ${bgClass} shadow-sm transition-colors">
+                    <span class="text-[11px] font-bold text-on-surface-variant dark:text-gray-400 mb-1">${timeLabel}</span>
+                    <span class="text-xl font-extrabold text-on-surface dark:text-white mb-1.5">${hourBlock.temp.toFixed(0)}°</span>
+                    
+                    <div class="flex items-center gap-1 text-[10px] font-bold w-full justify-center ${hourBlock.precipProb > 40 ? 'text-[#0284c7] dark:text-[#38bdf8]' : 'text-outline dark:text-gray-500'}">
+                        <span class="material-symbols-outlined text-[14px]">water_drop</span> ${hourBlock.precipProb}%
+                    </div>
+                    
+                    <div class="flex items-center gap-1 text-[10px] font-bold w-full justify-center mt-1 ${hourBlock.wind > 15 ? 'text-error dark:text-red-400' : 'text-outline dark:text-gray-500'}">
+                        <span class="material-symbols-outlined text-[14px]">air</span> ${hourBlock.wind}
+                    </div>
+                </div>
+            `;
+            slider.innerHTML += cardHtml;
+        });
+      }
+    }
+
+    // STEP 3: Voice-First "Read Aloud" Feature
+    function readWeatherAloud() {
+      if (!window.speechSynthesis || !latestWeatherState) {
+          alert("Speech synthesis is not supported on this device.");
+          return;
+      }
+      
+      const btn = document.getElementById('read-aloud-btn');
+      btn.classList.add('animate-pulse');
+
+      const w = latestWeatherState;
+      const lang = localStorage.getItem('annadata_global_lang') || 'en';
+      
+      let textToSpeak = "";
+
+      if (lang === 'hi') {
+          textToSpeak = `वर्तमान तापमान ${w.temp.toFixed(0)} डिग्री है और हवा की गति ${w.wind} किलोमीटर प्रति घंटा है। `;
+          textToSpeak += (w.wind > 15 || w.precip > 0) ? "कृपया अभी छिड़काव न करें। " : "मौसम छिड़काव के लिए अनुकूल है। ";
+          textToSpeak += (w.precip > 0) ? "बारिश हो रही है, सिंचाई रोक दें।" : "सिंचाई की जा सकती है।";
+      } else {
+          textToSpeak = `The current temperature is ${w.temp.toFixed(0)} degrees with a wind speed of ${w.wind} kilometers per hour. `;
+          textToSpeak += (w.wind > 15 || w.precip > 0) ? "Do not spray chemicals right now. " : "Conditions are safe for spraying. ";
+          textToSpeak += (w.precip > 0) ? "Halt irrigation due to rain." : "You may proceed with irrigation.";
+      }
+
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      utterance.lang = lang === 'hi' ? 'hi-IN' : 'en-IN';
+      utterance.rate = 0.9; // Slightly slower for clarity
+      
+      utterance.onend = () => {
+          btn.classList.remove('animate-pulse');
+      };
+
+      window.speechSynthesis.speak(utterance);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      applyLanguage();
+      loadWeatherData();
+    });
+  </script>
+</body>
+</html>

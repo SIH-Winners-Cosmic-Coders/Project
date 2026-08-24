@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary":"#023625", "primary-container":"#1f4d3a", "surface":"#faf9f5",
+            "surface-dim":"#dbdad6", "surface-container":"#efeeea", "on-surface":"#1b1c1a",
+            "on-surface-variant":"#414944", "outline":"#717973", "error":"#ba1a1a",
+            "on-primary":"#ffffff", "on-primary-container":"#8dbda4",
+            "dark-surface":"#0f172a", "dark-card":"#1e293b", "dark-border":"#334155",
+            "secondary":"#974723", "tertiary":"#462702"
+          },
+          fontFamily: { "headline-md": ["Plus Jakarta Sans"], "label-caps": ["Plus Jakarta Sans"], "body-lg": ["Plus Jakarta Sans"] },
+          animation: { 'fade-in-zoom': 'fadeInZoom 0.4s ease-out forwards' },
+          keyframes: { fadeInZoom: { '0%': { opacity: '0', transform: 'scale(0.97)' }, '100%': { opacity: '1', transform: 'scale(1)' } } }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; overscroll-behavior: none; }
+    ::-webkit-scrollbar { display: none; }
+    .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
+    .pt-safe { padding-top: env(safe-area-inset-top, 20px); }
+  </style>
+  <script>
+    function syncTheme() { document.documentElement.classList.toggle('dark', localStorage.theme === 'dark'); }
+    syncTheme(); window.addEventListener('storage', (e) => { if (e.key === 'theme') syncTheme(); });
+  </script>
+</head>
+<body class="bg-surface dark:bg-dark-surface text-on-surface dark:text-white transition-colors duration-300">
+
+  <header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 dark:bg-dark-surface/90 backdrop-blur-xl border-b border-surface-dim/40 dark:border-dark-border transition-colors duration-300">
+    <div class="flex items-center justify-between h-16 px-5">
+      <div class="flex items-center gap-4">
+        <button onclick="window.parent.postMessage({type: 'navigate', target: 'home_dashboard'}, '*');" class="active:opacity-70 transition-opacity">
+          <span class="material-symbols-outlined text-primary dark:text-[#a1d1b8] text-[28px]">arrow_back</span>
+        </button>
+        <h1 data-i18n="pageTitle" class="text-xl font-bold text-primary dark:text-[#a1d1b8]">Irrigation</h1>
+      </div>
+      <button class="w-9 h-9 rounded-full bg-primary-container dark:bg-dark-card border border-transparent dark:border-dark-border text-white flex items-center justify-center shadow-sm hover:scale-105 transition-transform" onclick="window.parent.postMessage({type: 'navigate', target: 'ai_assistant'}, '*');">
+        <span class="material-symbols-outlined text-primary dark:text-[#a1d1b8] text-[20px]">mic</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="w-full pt-20 pb-28 min-h-screen px-5 flex flex-col gap-5 animate-fade-in-zoom relative z-10">
+    
+    <!-- Rain Delay Smart Card -->
+    <section class="bg-primary-container dark:bg-[#1e293b] text-white rounded-2xl p-5 shadow-sm dark:border dark:border-dark-border flex gap-4 items-start transition-colors">
+      <span class="material-symbols-outlined text-[36px] text-primary-fixed dark:text-[#a1d1b8] mt-1">rainy</span>
+      <div>
+        <h3 data-i18n="rainWarningTitle" class="font-bold text-lg">Delay Recommended</h3>
+        <p data-i18n="rainWarningDesc" class="text-sm opacity-90 dark:text-gray-300 mt-1 leading-relaxed">80% chance of heavy rain tomorrow. Pause manual irrigation to save effort and prevent waterlogging.</p>
+      </div>
+    </section>
+
+    <!-- Status & Action Hub -->
+    <section class="bg-surface-container-lowest dark:bg-dark-card rounded-2xl p-6 shadow-sm border border-surface-dim/30 dark:border-dark-border text-center transition-colors">
+      <div class="w-20 h-20 mx-auto bg-secondary/10 dark:bg-orange-500/20 rounded-full flex items-center justify-center mb-3">
+        <span class="material-symbols-outlined text-[40px] text-secondary dark:text-orange-400">water_drop</span>
+      </div>
+      <h2 class="text-[36px] font-bold text-on-surface dark:text-white leading-none">32% <span class="text-base font-normal text-on-surface-variant dark:text-gray-400 block mt-1">Moisture</span></h2>
+      <p data-i18n="soilDry" class="text-xs font-bold text-secondary dark:text-orange-400 mt-2 uppercase tracking-wider">Soil is Dry</p>
+
+      <button id="irrigate-btn" onclick="markIrrigated()" class="w-full mt-6 bg-primary dark:bg-[#a1d1b8] text-white dark:text-black font-bold text-sm py-3.5 rounded-xl shadow-md active:scale-95 transition-transform flex items-center justify-center gap-2">
+        <span class="material-symbols-outlined">check_circle</span>
+        <span id="irrigate-btn-text" data-i18n="markIrrigated">Mark as Irrigated Today</span>
+      </button>
+    </section>
+
+    <!-- Water Requirement Card -->
+    <section class="bg-surface-container-lowest dark:bg-dark-card rounded-2xl p-5 shadow-sm border border-surface-dim/30 dark:border-dark-border transition-colors">
+      <div class="flex items-center gap-2 mb-4">
+        <span class="material-symbols-outlined text-primary dark:text-[#a1d1b8]">grass</span>
+        <h2 data-i18n="cropReqTitle" class="text-lg font-bold text-on-surface dark:text-white">Weekly Requirement</h2>
+      </div>
+      
+      <div class="flex justify-between items-end mb-3">
+        <div>
+          <p class="text-sm font-bold text-on-surface dark:text-white">Sugarcane</p>
+          <p data-i18n="stage" class="text-xs text-on-surface-variant dark:text-gray-400 mt-0.5">Grand Growth Stage</p>
+        </div>
+        <div class="text-right">
+          <span class="text-lg font-bold text-primary dark:text-[#a1d1b8]">2 inches</span>
+          <span data-i18n="thisWeek" class="text-xs text-on-surface-variant dark:text-gray-400 block uppercase tracking-wide mt-0.5">Target</span>
+        </div>
+      </div>
+      
+      <!-- Progress bar -->
+      <div class="w-full bg-surface-container dark:bg-dark-surface h-3 rounded-full overflow-hidden">
+        <div class="bg-primary dark:bg-[#a1d1b8] h-full w-[20%] rounded-full shadow-inner transition-colors"></div>
+      </div>
+      <p data-i18n="fulfilled" class="text-xs font-semibold text-on-surface-variant dark:text-gray-400 mt-2 text-right">20% fulfilled by recent rain</p>
+    </section>
+
+    <!-- Source Selector -->
+    <section class="bg-surface-container-lowest dark:bg-dark-card rounded-2xl p-5 shadow-sm border border-surface-dim/30 dark:border-dark-border transition-colors">
+      <label data-i18n="sourceLabel" class="text-xs font-bold text-on-surface-variant dark:text-gray-400 uppercase tracking-wider mb-2 block">Primary Water Source</label>
+      <div class="relative">
+        <select id="water-source" class="w-full bg-surface-container dark:bg-dark-surface text-on-surface dark:text-white text-sm border border-surface-dim dark:border-dark-border rounded-xl px-4 py-3 outline-none focus:border-primary dark:focus:border-[#a1d1b8] appearance-none font-semibold cursor-pointer transition-colors">
+          <option value="canal">Canal / Nahar</option>
+          <option value="borewell">Borewell / Tube-well</option>
+          <option value="drip">Drip / Sprinkler</option>
+          <option value="rain">Rain-fed (Monsoon)</option>
+        </select>
+        <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant dark:text-gray-400 pointer-events-none">expand_more</span>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    const i18nDict = {
+      en: { pageTitle: "Irrigation", rainWarningTitle: "Delay Recommended", rainWarningDesc: "80% chance of heavy rain tomorrow. Pause manual irrigation to save effort and prevent waterlogging.", soilDry: "Soil is Dry", markIrrigated: "Mark as Irrigated Today", cropReqTitle: "Weekly Requirement", stage: "Grand Growth Stage", thisWeek: "Target", fulfilled: "20% fulfilled by recent rain", sourceLabel: "Primary Water Source" },
+      hi: { pageTitle: "सिंचाई", rainWarningTitle: "देरी की सलाह", rainWarningDesc: "कल भारी बारिश की 80% संभावना है। जलभराव और मेहनत बचाने के लिए सिंचाई रोकें।", soilDry: "मिट्टी सूखी है", markIrrigated: "आज सिंचित के रूप में चिह्नित करें", cropReqTitle: "साप्ताहिक आवश्यकता", stage: "प्रमुख विकास चरण", thisWeek: "लक्ष्य", fulfilled: "हाल की बारिश से 20% पूरा हुआ", sourceLabel: "मुख्य जल स्रोत" },
+      od: { pageTitle: "ଜଳସେଚନ", rainWarningTitle: "ବିଳମ୍ବ କରିବାକୁ ପରାମର୍ଶ", rainWarningDesc: "ଆସନ୍ତାକାଲି ପ୍ରବଳ ବର୍ଷା ହେବାର ୮୦% ସମ୍ଭାବନା ଅଛି | ପରିଶ୍ରମ ବଞ୍ଚାଇବା ପାଇଁ ମାନୁଆଲ୍ ଜଳସେଚନ ବନ୍ଦ କରନ୍ତୁ |", soilDry: "ମାଟି ଶୁଖିଲା ଅଛି", markIrrigated: "ଆଜି ଜଳସେଚିତ ଭାବରେ ଚିହ୍ନିତ କରନ୍ତୁ", cropReqTitle: "ସାପ୍ତାହିକ ଆବଶ୍ୟକତା", stage: "ବିକାଶ ପର୍ଯ୍ୟାୟ", thisWeek: "ଲକ୍ଷ୍ୟ", fulfilled: "ବର୍ଷା ଦ୍ୱାରା ୨୦% ପୂରଣ ହୋଇଛି", sourceLabel: "ମୁଖ୍ୟ ଜଳ ଉତ୍ସ" }
+    };
+    
+    let currentLang = 'en';
+
+    function applyUiLanguage() {
+      currentLang = localStorage.getItem('annadata_global_lang') || 'od';
+      const dict = i18nDict[currentLang] || i18nDict['en'];
+      
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (dict[key]) el.innerText = dict[key];
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', applyUiLanguage);
+    window.addEventListener('storage', (e) => { if (e.key === 'annadata_global_lang') applyUiLanguage(); });
+
+    async function markIrrigated() {
+      const btn = document.getElementById('irrigate-btn');
+      const textSpan = document.getElementById('irrigate-btn-text');
+      const originalText = textSpan.innerText;
+      
+      textSpan.innerText = "Saving...";
+      btn.classList.add('opacity-80');
+      
+      const payload = {
+        title: "Irrigation Logged",
+        description: `Field watered manually using ${document.getElementById('water-source').options[document.getElementById('water-source').selectedIndex].text}.`,
+        icon_type: "water_drop",
+        theme_color: "secondary"
+      };
+
+      try {
+        const res = await fetch('/api/v1/farm/history', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        
+        if (res.ok) {
+          textSpan.innerText = "Logged Successfully!";
+          btn.classList.replace('bg-primary', 'bg-secondary');
+          setTimeout(() => {
+            textSpan.innerText = originalText;
+            btn.classList.replace('bg-secondary', 'bg-primary');
+            btn.classList.remove('opacity-80');
+          }, 3000);
+        }
+      } catch (err) {
+        alert("Failed to log irrigation offline.");
+        textSpan.innerText = originalText;
+        btn.classList.remove('opacity-80');
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#023625",
+            "primary-container": "#1f4d3a",
+            "surface": "#faf9f5",
+            "surface-dim": "#dbdad6",
+            "surface-container": "#efeeea",
+            "surface-container-lowest": "#ffffff",
+            "on-surface": "#1b1c1a",
+            "on-surface-variant": "#414944",
+            "outline": "#717973",
+            "error": "#ba1a1a",
+            "secondary": "#974723",
+            "dark-surface": "#0f172a",
+            "dark-card": "#1e293b",
+            "dark-border": "#334155"
+          },
+          fontFamily: {
+            "headline-md": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"]
+          },
+          animation: {
+            'fade-in-zoom': 'fadeInZoom 0.4s ease-out forwards'
+          },
+          keyframes: {
+            fadeInZoom: {
+              '0%': { opacity: '0', transform: 'scale(0.97)' },
+              '100%': { opacity: '1', transform: 'scale(1)' }
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; overscroll-behavior: none; }
+    ::-webkit-scrollbar { display: none; }
+    .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
+    .pt-safe { padding-top: env(safe-area-inset-top, 20px); }
+    
+    .timeline-line::before {
+      content: '';
+      position: absolute;
+      left: 19px;
+      top: 32px;
+      bottom: -16px;
+      width: 2px;
+      background-color: #dbdad6;
+      z-index: 0;
+    }
+    .dark .timeline-line::before {
+      background-color: #334155;
+    }
+    .timeline-item:last-child .timeline-line::before {
+      display: none;
+    }
+  </style>
+
+  <!-- Immediate Theme Initializer -->
+  <script>
+    function syncTheme() {
+      const isDark = localStorage.getItem('theme') === 'dark' || 
+                     (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      document.documentElement.classList.toggle('dark', isDark);
+    }
+    syncTheme();
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'theme') syncTheme();
+    });
+  </script>
+</head>
+<body class="bg-surface dark:bg-dark-surface text-on-surface dark:text-white transition-colors duration-300">
+
+  <!-- Header -->
+  <header class="fixed top-0 w-full z-50 pt-safe bg-surface/90 dark:bg-dark-surface/90 backdrop-blur-xl border-b border-surface-dim/40 dark:border-dark-border transition-colors duration-300">
+    <div class="flex items-center justify-between h-16 px-5">
+      <div class="flex items-center gap-4">
+        <button onclick="window.parent.postMessage({type: 'navigate', target: 'home_dashboard'}, '*');" class="active:opacity-70 transition-opacity">
+          <span class="material-symbols-outlined text-primary dark:text-[#a1d1b8] text-[28px]">arrow_back</span>
+        </button>
+        <h1 data-i18n="title" class="text-xl font-bold text-primary dark:text-[#a1d1b8]">Crop Ledger</h1>
+      </div>
+      
+      <!-- High-Contrast Header AI Mic -->
+      <button onclick="window.parent.postMessage({type: 'navigate', target: 'ai_assistant'}, '*');" 
+              class="w-9 h-9 rounded-full bg-surface-container-lowest dark:bg-dark-card border border-surface-dim/60 dark:border-dark-border text-primary dark:text-[#a1d1b8] flex items-center justify-center shadow-sm hover:scale-105 active:scale-95 transition-transform" 
+              aria-label="Ask AnnaDATA AI">
+        <span class="material-symbols-outlined text-[20px]">mic</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="w-full pt-20 pb-28 min-h-screen px-5 flex flex-col gap-5 animate-fade-in-zoom relative z-10">
+    
+    <!-- AI Yield & Mandi Analytics Card -->
+    <section class="bg-surface-container-lowest dark:bg-dark-card rounded-2xl p-5 shadow-sm border border-surface-dim/40 dark:border-dark-border transition-colors">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-secondary dark:text-orange-400">psychiatry</span>
+          <h2 data-i18n="marketTitle" class="text-lg font-bold text-on-surface dark:text-white">Yield & Revenue AI</h2>
+        </div>
+        <button onclick="applyAiSuggestion()" class="flex items-center gap-1 text-[10px] font-bold text-primary dark:text-[#a1d1b8] bg-primary/10 dark:bg-primary/20 border border-primary/20 dark:border-[#a1d1b8]/30 px-2.5 py-1 rounded-full shadow-sm hover:scale-105 active:scale-95 transition">
+          <span class="material-symbols-outlined text-[14px]">auto_awesome</span> Suggest Crop
+        </button>
+      </div>
+      
+      <!-- Controls -->
+      <div class="flex gap-3 mb-4">
+        <div class="flex-[2]">
+          <label data-i18n="cropSelect" class="text-xs font-bold text-on-surface-variant dark:text-gray-400 uppercase mb-1 block">Target Crop</label>
+          <select id="mandi-commodity" onchange="fetchYieldPrediction()" 
+                  class="w-full bg-surface-container dark:bg-dark-surface text-on-surface dark:text-white text-sm border border-surface-dim dark:border-dark-border rounded-xl px-3 py-2.5 outline-none focus:ring-1 focus:ring-primary dark:focus:ring-[#a1d1b8] font-bold transition-colors">
+            <!-- Dynamically populated across all 20 crops in selected language -->
+          </select>
+        </div>
+        <div class="flex-1">
+          <label class="text-xs font-bold text-on-surface-variant dark:text-gray-400 uppercase mb-1 block">Acres</label>
+          <input id="farm-acres-input" type="number" step="0.1" title="Acres" oninput="fetchYieldPrediction()" 
+                 class="w-full bg-surface-container dark:bg-dark-surface text-on-surface dark:text-white text-sm border border-surface-dim dark:border-dark-border rounded-xl px-3 py-2.5 outline-none focus:ring-1 focus:ring-primary dark:focus:ring-[#a1d1b8] font-bold transition-colors">
+        </div>
+      </div>
+
+      <!-- ROI / Net Profit Calculator Slider & Dynamic Breakdown -->
+      <div class="mb-4 pb-4 border-b border-surface-dim/40 dark:border-dark-border">
+        <div class="flex justify-between items-center mb-1">
+          <label class="text-xs font-bold text-on-surface-variant dark:text-gray-400 uppercase">Input Cost / Acre</label>
+          <span id="cost-display" class="text-xs font-bold text-error dark:text-red-400">₹15,000</span>
+        </div>
+        
+        <input type="range" id="input-cost-slider" min="0" max="60000" step="500" value="15000" oninput="updateFinancials()" 
+               class="w-full h-2 mt-2 mb-3 bg-surface-dim dark:bg-dark-surface rounded-lg appearance-none cursor-pointer accent-primary dark:accent-[#10b981]">
+        
+        <!-- Dynamic Cost Breakdown UI -->
+        <div class="bg-surface-dim/30 dark:bg-dark-surface/50 rounded-lg p-2.5 flex flex-wrap gap-x-4 gap-y-2 justify-between">
+          <div class="flex flex-col">
+            <span class="text-[9px] font-bold text-outline dark:text-gray-500 uppercase">Labor (40%)</span>
+            <span id="cost-labor" class="text-xs font-bold text-on-surface dark:text-white">₹6,000</span>
+          </div>
+          <div class="flex flex-col">
+            <span class="text-[9px] font-bold text-outline dark:text-gray-500 uppercase">Fertilizer (25%)</span>
+            <span id="cost-fert" class="text-xs font-bold text-on-surface dark:text-white">₹3,750</span>
+          </div>
+          <div class="flex flex-col">
+            <span class="text-[9px] font-bold text-outline dark:text-gray-500 uppercase">Machine/Fuel (20%)</span>
+            <span id="cost-mach" class="text-xs font-bold text-on-surface dark:text-white">₹3,000</span>
+          </div>
+          <div class="flex flex-col">
+            <span class="text-[9px] font-bold text-outline dark:text-gray-500 uppercase">Seed/Spray (15%)</span>
+            <span id="cost-seed" class="text-xs font-bold text-on-surface dark:text-white">₹2,250</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Advisory Strategy Banner -->
+      <div id="advisory-banner" class="hidden mb-4 p-3.5 rounded-xl flex items-start gap-2.5 border transition-all">
+        <span id="advisory-icon" class="material-symbols-outlined text-[20px] shrink-0 mt-0.5">info</span>
+        <div>
+          <h3 id="advisory-title" class="text-sm font-bold">Market Strategy</h3>
+          <p id="advisory-desc" class="text-xs mt-0.5 leading-relaxed"></p>
+        </div>
+      </div>
+
+      <!-- Results Matrix -->
+      <div class="bg-surface-container dark:bg-dark-surface rounded-xl p-4 border border-primary/20 dark:border-dark-border flex flex-col gap-3 transition-colors">
+        <div class="flex justify-between items-center pb-2 border-b border-surface-dim/40 dark:border-dark-border">
+          <span class="text-xs font-bold text-on-surface-variant dark:text-gray-400 uppercase">Est. Total Yield</span>
+          <span id="res-yield" class="text-base font-extrabold text-primary dark:text-[#a1d1b8]">--</span>
+        </div>
+        <div class="flex justify-between items-center pb-2 border-b border-surface-dim/40 dark:border-dark-border">
+          <span class="text-xs font-bold text-on-surface-variant dark:text-gray-400 uppercase">Gross Revenue</span>
+          <span id="res-revenue" class="text-sm font-bold text-on-surface dark:text-white">--</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-xs font-bold text-on-surface-variant dark:text-gray-400 uppercase">Est. Net Profit</span>
+          <span id="res-profit" class="text-xl font-extrabold text-secondary dark:text-orange-400">--</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Lifecycle Ledger with Voice Expense Logging -->
+    <section class="bg-surface-container-lowest dark:bg-dark-card rounded-2xl p-5 shadow-sm border border-surface-dim/40 dark:border-dark-border transition-colors">
+      <div class="flex items-center justify-between mb-5 border-b border-surface-dim/40 dark:border-dark-border pb-3">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary dark:text-[#a1d1b8]">history</span>
+          <h2 data-i18n="timelineTitle" class="text-lg font-bold text-on-surface dark:text-white">Lifecycle Ledger</h2>
+        </div>
+        
+        <div class="flex items-center gap-2">
+          <!-- High-Contrast Voice-to-Ledger Mic -->
+          <button onclick="startVoiceLedger()" id="ledger-mic" 
+                  class="bg-primary dark:bg-[#10b981] text-white dark:text-black w-8 h-8 rounded-full flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-all"
+                  title="Voice Log Expense">
+            <span class="material-symbols-outlined text-[18px]">mic</span>
+          </button>
+          
+          <button onclick="exportTimelinePDF()" 
+                  class="text-primary dark:text-[#a1d1b8] font-bold text-xs bg-primary/10 dark:bg-primary/20 border border-primary/20 dark:border-[#a1d1b8]/30 px-3 py-1.5 rounded-full hover:scale-105 active:scale-95 transition" 
+                  data-i18n="export">
+            Export PDF
+          </button>
+        </div>
+      </div>
+
+      <div id="timeline-container" class="flex flex-col gap-4 relative pl-4 border-l-2 border-surface-dim dark:border-dark-border ml-2">        
+        <!-- Rendered via JS -->
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    let currentPrediction = { revenue: 0, ai_crop: "Wheat" };
+
+    // 20 Crops Translations Dictionary
+    const cropTranslations = {
+      en: {
+        Wheat: "Wheat", Paddy: "Paddy (Rice)", Sugarcane: "Sugarcane", Maize: "Maize (Corn)",
+        Cotton: "Cotton", Soybean: "Soybean", Mustard: "Mustard", Groundnut: "Groundnut",
+        Gram: "Gram (Chickpea)", Tur: "Tur (Arhar)", Moong: "Moong (Green Gram)", Jute: "Jute",
+        Potato: "Potato", Onion: "Onion", Tomato: "Tomato", Bajra: "Bajra (Pearl Millet)",
+        Jowar: "Jowar (Sorghum)", Ragi: "Ragi (Finger Millet)", Barley: "Barley", Sesame: "Sesame (Til)"
+      },
+      hi: {
+        Wheat: "गेहूं (Wheat)", Paddy: "धान / चावल (Paddy)", Sugarcane: "गन्ना (Sugarcane)", Maize: "मक्का (Maize)",
+        Cotton: "कपास (Cotton)", Soybean: "सोयाबीन (Soybean)", Mustard: "सरसों (Mustard)", Groundnut: "मूंगफली (Groundnut)",
+        Gram: "चना (Gram)", Tur: "अरहर / तूर (Tur)", Moong: "मूंग (Moong)", Jute: "जूट / पटसन (Jute)",
+        Potato: "आलू (Potato)", Onion: "प्याज (Onion)", Tomato: "टमाटर (Tomato)", Bajra: "बाजरा (Bajra)",
+        Jowar: "ज्वार (Jowar)", Ragi: "रागी / मडुआ (Ragi)", Barley: "जौ (Barley)", Sesame: "तिल (Sesame)"
+      },
+      od: {
+        Wheat: "ଗହମ (Wheat)", Paddy: "ଧାନ (Paddy)", Sugarcane: "ଆଖୁ (Sugarcane)", Maize: "ମକା (Maize)",
+        Cotton: "କପା (Cotton)", Soybean: "ସୋୟାବିନ (Soybean)", Mustard: "ସୋରିଷ (Mustard)", Groundnut: "ଚିନାବାଦାମ (Groundnut)",
+        Gram: "ବୁଟ (Gram)", Tur: "ହରଡ଼ (Tur)", Moong: "ମୁଗ (Moong)", Jute: "ଝୋଟ (Jute)",
+        Potato: "ଆଳୁ (Potato)", Onion: "ପିଆଜ (Onion)", Tomato: "ବିଲାତି ବାଇଗଣ (Tomato)", Bajra: "ବାଜରା (Bajra)",
+        Jowar: "ଜୁଆର (Jowar)", Ragi: "ମାଣ୍ଡିଆ (Ragi)", Barley: "ଯବ (Barley)", Sesame: "ରାଶି (Sesame)"
+      },
+      bn: {
+        Wheat: "গম (Wheat)", Paddy: "ধান (Paddy)", Sugarcane: "আখ (Sugarcane)", Maize: "ভুট্টা (Maize)",
+        Cotton: "তুলা (Cotton)", Soybean: "সয়াবিন (Soybean)", Mustard: "সরিষা (Mustard)", Groundnut: "চীনাবাদাম (Groundnut)",
+        Gram: "ছোলা (Gram)", Tur: "অড়হর (Tur)", Moong: "মুগ (Moong)", Jute: "পাট (Jute)",
+        Potato: "আলু (Potato)", Onion: "পেঁয়াজ (Onion)", Tomato: "টমেটো (Tomato)", Bajra: "বাজরা (Bajra)",
+        Jowar: "জোয়ার (Jowar)", Ragi: "রাগি (Ragi)", Barley: "বার্লি (Barley)", Sesame: "তিল (Sesame)"
+      },
+      te: {
+        Wheat: "గోధుమ (Wheat)", Paddy: "వరి (Paddy)", Sugarcane: "చెరకు (Sugarcane)", Maize: "మొక్కజొన్న (Maize)",
+        Cotton: "పత్తి (Cotton)", Soybean: "సోయాబీన్ (Soybean)", Mustard: "ఆవాలు (Mustard)", Groundnut: "వేరుశనగ (Groundnut)",
+        Gram: "శనగలు (Gram)", Tur: "కందులు (Tur)", Moong: "పెసలు (Moong)", Jute: "జనపనార (Jute)",
+        Potato: "బంగాళాదుంప (Potato)", Onion: "ఉల్లిపాయ (Onion)", Tomato: "టమోటా (Tomato)", Bajra: "సజ్జలు (Bajra)",
+        Jowar: "జొన్నలు (Jowar)", Ragi: "రాగులు (Ragi)", Barley: "బార్లీ (Barley)", Sesame: "నువ్వులు (Sesame)"
+      },
+      ta: {
+        Wheat: "கோதுமை (Wheat)", Paddy: "நெல் (Paddy)", Sugarcane: "கரும்பு (Sugarcane)", Maize: "மக்காச்சோளம் (Maize)",
+        Cotton: "பருத்தி (Cotton)", Soybean: "சோயாபீன் (Soybean)", Mustard: "கடுகு (Mustard)", Groundnut: "நிலக்கடலை (Groundnut)",
+        Gram: "கொண்டைக்கடலை (Gram)", Tur: "துவரை (Tur)", Moong: "பாசிப்பயறு (Moong)", Jute: "சணல் (Jute)",
+        Potato: "உருளைக்கிழங்கு (Potato)", Onion: "வெங்காயம் (Onion)", Tomato: "தக்காளி (Tomato)", Bajra: "கம்பு (Bajra)",
+        Jowar: "சோளம் (Jowar)", Ragi: "கேழ்வரகு (Ragi)", Barley: "பார்லி (Barley)", Sesame: "எள் (Sesame)"
+      },
+      mr: {
+        Wheat: "गहू (Wheat)", Paddy: "भात / धान (Paddy)", Sugarcane: "ऊस (Sugarcane)", Maize: "मका (Maize)",
+        Cotton: "कापूस (Cotton)", Soybean: "सोयाबीन (Soybean)", Mustard: "मोहरी (Mustard)", Groundnut: "भुईमूग (Groundnut)",
+        Gram: "हरभरा (Gram)", Tur: "तूर (Tur)", Moong: "मूग (Moong)", Jute: "ताग (Jute)",
+        Potato: "बटाटा (Potato)", Onion: "कांदा (Onion)", Tomato: "टोमॅटो (Tomato)", Bajra: "बाजरी (Bajra)",
+        Jowar: "ज्वारी (Jowar)", Ragi: "नाचणी (Ragi)", Barley: "जव (Barley)", Sesame: "तीळ (Sesame)"
+      }
+    };
+
+    const ALL_CROPS_KEYS = [
+      "Wheat", "Paddy", "Sugarcane", "Maize", "Cotton", 
+      "Soybean", "Mustard", "Groundnut", "Gram", "Tur", 
+      "Moong", "Jute", "Potato", "Onion", "Tomato", 
+      "Bajra", "Jowar", "Ragi", "Barley", "Sesame"
+    ];
+
+    const i18nDict = {
+      en: { title: "Crop Ledger", marketTitle: "Yield & Revenue AI", cropSelect: "Target Crop", timelineTitle: "Lifecycle Ledger", export: "Export PDF", suggestBtn: "Suggest Crop" },
+      hi: { title: "फसल लेजर", marketTitle: "उपज और राजस्व एआई", cropSelect: "लक्षित फसल", timelineTitle: "जीवनचक्र लेजर", export: "निर्यात", suggestBtn: "फसल सुझाव" },
+      od: { title: "ଫସଲ ଖାତା", marketTitle: "ଅମଳ ଓ ରାଜସ୍ୱ ଏଆଇ", cropSelect: "ନିର୍ଦ୍ଦିଷ୍ଟ ଫସଲ", timelineTitle: "ଜୀବନଚକ୍ର ଖାତା", export: "ଏକ୍ସପୋର୍ଟ", suggestBtn: "ଫସଲ ପରାମର୍ଶ" },
+      bn: { title: "ফসলের খাতা", marketTitle: "ফলন ও রাজস্ব এআই", cropSelect: "নির্দিষ্ট ফসল", timelineTitle: "জীবনচক্র খাতা", export: "রপ্তানি", suggestBtn: "পরামর্শ দিন" },
+      te: { title: "పంట లెడ్జర్", marketTitle: "దిగుబడి & ఆదాయం AI", cropSelect: "ఎంచుకున్న పంట", timelineTitle: "జీవిత చక్ర లెడ్జర్", export: "ఎగుమతి", suggestBtn: "పంట సూచన" },
+      ta: { title: "பயிர் பேரேடு", marketTitle: "மகசூல் & வருவாய் AI", cropSelect: "தேர்ந்தெடுக்கப்பட்ட பயிர்", timelineTitle: "வாழ்க்கை சுழற்சி பேரேடு", export: "ஏற்றுமதி", suggestBtn: "பயிர் பரிந்துரை" },
+      mr: { title: "पीक नोंदवही", marketTitle: "उत्पादन आणि महसूल AI", cropSelect: "निवडलेले पीक", timelineTitle: "जीवनचक्र नोंदवही", export: "निर्यात", suggestBtn: "पीक सल्ला" }
+    };
+
+    function populateCropDropdown(selectedCrop = "Wheat") {
+      const lang = localStorage.getItem('annadata_global_lang') || 'en';
+      const dict = cropTranslations[lang] || cropTranslations['en'];
+      const selectEl = document.getElementById('mandi-commodity');
+      
+      const prevVal = selectEl.value || selectedCrop;
+      selectEl.innerHTML = '';
+
+      ALL_CROPS_KEYS.forEach(key => {
+        const opt = document.createElement('option');
+        opt.value = key; // Always pass standard English key to backend
+        opt.innerText = dict[key] || key;
+        if (key.toLowerCase() === prevVal.toLowerCase() || key.toLowerCase() === selectedCrop.toLowerCase()) {
+          opt.selected = true;
+        }
+        selectEl.appendChild(opt);
+      });
+    }
+
+    function applyUiLanguage() {
+      const lang = localStorage.getItem('annadata_global_lang') || 'en';
+      const dict = i18nDict[lang] || i18nDict['en'];
+      
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (dict[key]) el.innerText = dict[key];
+      });
+
+      populateCropDropdown();
+    }
+
+    function initFarmData() {
+      const savedProfile = localStorage.getItem('annadata_user_profile');
+      let farmAcres = 12.5;
+      let cropName = "Paddy (Rice / Dhaan / ଧାନ)";
+      
+      if (savedProfile) {
+        try {
+          const profile = JSON.parse(savedProfile);
+          if (profile.farm_size) farmAcres = parseFloat(profile.farm_size.replace(/[^0-9.]/g, '')) || 12.5;
+          if (profile.crop) cropName = profile.crop;
+        } catch(e) {}
+      }
+      
+      document.getElementById('farm-acres-input').value = farmAcres;
+      document.getElementById('mandi-commodity').value = cropName;
+      fetchYieldPrediction();
+      loadTimeline();
+    }
+
+    async function fetchYieldPrediction() {
+      const rawCrop = document.getElementById('mandi-commodity').value || "Wheat";
+      const commodity = rawCrop.split(' ')[0]; 
+      const acres = parseFloat(document.getElementById('farm-acres-input').value) || 1.0;
+      
+      try {
+        // Add this inside loadWeatherData() and fetchYieldPrediction() right after 'try {'
+if (localStorage.getItem('annadata_demo_offline') === 'true') throw new Error("Demo Offline Mode Triggered");
+        const response = await fetch(`/api/v1/market/predict?commodity=${encodeURIComponent(commodity)}&acres=${acres}&moisture=42.0&temp=28.0`);
+        const result = await response.json();
+
+        if (result.status === 'success') {
+          currentPrediction = result;
+          renderMatrix(result);
+          renderAdvisory(result);
+        }
+      } catch (error) {
+        console.error("Inference fetch error:", error);
+      }
+    }
+
+    function renderMatrix(data) {
+      document.getElementById('res-yield').innerText = `${data.total_predicted_yield_quintals.toLocaleString('en-IN')} Q`;
+      document.getElementById('res-revenue').innerText = `₹${data.projected_revenue_inr.toLocaleString('en-IN')}`;
+      updateFinancials(); 
+    }
+
+    function renderAdvisory(data) {
+      const banner = document.getElementById('advisory-banner');
+      const icon = document.getElementById('advisory-icon');
+      const title = document.getElementById('advisory-title');
+      const desc = document.getElementById('advisory-desc');
+      
+      banner.className = "mb-4 p-3.5 rounded-xl flex items-start gap-2.5 border transition-all";
+      
+      if (data.msp_warning) {
+        banner.classList.add('bg-error/10', 'border-error/30', 'text-error', 'dark:text-red-400');
+        icon.innerText = "warning";
+        title.innerText = "MSP Alert";
+        desc.innerText = `Market rate (₹${data.projected_mandi_price_per_q}) is below Govt MSP (₹${data.msp_rate}). Recommend selling at a Govt Procurement Center.`;
+      } else if (data.market_strategy === "HOLD") {
+        banner.classList.add('bg-secondary/10', 'border-secondary/30', 'text-secondary', 'dark:text-orange-400');
+        icon.innerText = "inventory_2";
+        title.innerText = "HOLD IN STORAGE";
+        desc.innerText = data.strategy_msg;
+      } else {
+        banner.classList.add('bg-[#10b981]/10', 'border-[#10b981]/30', 'text-[#10b981]', 'dark:text-[#4ade80]');
+        icon.innerText = "payments";
+        title.innerText = "SELL NOW";
+        desc.innerText = data.strategy_msg;
+      }
+    }
+
+   function updateFinancials() {
+      const costPerAcre = parseFloat(document.getElementById('input-cost-slider').value);
+      const acres = parseFloat(document.getElementById('farm-acres-input').value) || 1.0;
+      const selectedCrop = document.getElementById('mandi-commodity').value;
+      
+      // 1. Update the Main Cost Display
+      document.getElementById('cost-display').innerText = `₹${costPerAcre.toLocaleString('en-IN')}`;
+      
+      // 2. Dynamic Crop-Specific Cost Ratios (Based on CACP Data)
+      let laborPct = 0.40, fertPct = 0.25, machPct = 0.20, seedPct = 0.15;
+      
+      // If Paddy is selected, adjust to real-world Eastern India metrics
+      if (selectedCrop.includes("Paddy")) {
+          laborPct = 0.60; // Highly labor intensive (Transplanting/Harvesting)
+          fertPct = 0.15;
+          machPct = 0.15;  // Includes heavy irrigation
+          seedPct = 0.10;
+      } else if (selectedCrop.includes("Cotton")) {
+          laborPct = 0.45;
+          fertPct = 0.20;
+          machPct = 0.10;
+          seedPct = 0.25;  // Bt Cotton seeds are expensive
+      }
+
+      // Update the UI labels dynamically
+      document.querySelector('#cost-labor').previousElementSibling.innerText = `Labor (${(laborPct*100).toFixed(0)}%)`;
+      document.querySelector('#cost-fert').previousElementSibling.innerText = `Fertilizer (${(fertPct*100).toFixed(0)}%)`;
+      document.querySelector('#cost-mach').previousElementSibling.innerText = `Irrig/Mach (${(machPct*100).toFixed(0)}%)`;
+      document.querySelector('#cost-seed').previousElementSibling.innerText = `Seed (${(seedPct*100).toFixed(0)}%)`;
+
+      // Calculate and display the segmented costs
+      document.getElementById('cost-labor').innerText = `₹${(costPerAcre * laborPct).toLocaleString('en-IN', {maximumFractionDigits: 0})}`;
+      document.getElementById('cost-fert').innerText = `₹${(costPerAcre * fertPct).toLocaleString('en-IN', {maximumFractionDigits: 0})}`;
+      document.getElementById('cost-mach').innerText = `₹${(costPerAcre * machPct).toLocaleString('en-IN', {maximumFractionDigits: 0})}`;
+      document.getElementById('cost-seed').innerText = `₹${(costPerAcre * seedPct).toLocaleString('en-IN', {maximumFractionDigits: 0})}`;
+      
+      // 3. Calculate Net Profit
+      const totalCost = costPerAcre * acres;
+      const netProfit = currentPrediction.projected_revenue_inr - totalCost;
+      
+      const profitEl = document.getElementById('res-profit');
+      profitEl.innerText = `₹${netProfit.toLocaleString('en-IN')}`;
+      profitEl.className = netProfit >= 0 
+        ? "text-xl font-extrabold text-primary dark:text-[#4ade80]" 
+        : "text-xl font-extrabold text-error dark:text-red-400";
+    }
+
+    function applyAiSuggestion() {
+      document.getElementById('mandi-commodity').value = currentPrediction.ai_recommended_crop || "Maize";
+      fetchYieldPrediction();
+    }
+
+    // Bulletproof Voice-to-Ledger
+    function startVoiceLedger() {
+      const micBtn = document.getElementById('ledger-mic');
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      
+      if (!SpeechRec) { 
+        alert("Voice recognition is not supported in this browser. Please use Chrome."); 
+        return; 
+      }
+      
+      const recognition = new SpeechRec();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      const lang = localStorage.getItem('annadata_global_lang') || 'en';
+      const dialectMap = { 'en': 'en-IN', 'hi': 'hi-IN', 'od': 'or-IN', 'bn': 'bn-IN', 'te': 'te-IN', 'ta': 'ta-IN', 'mr': 'mr-IN' };
+      recognition.lang = dialectMap[lang] || 'en-IN';
+      
+      recognition.onstart = () => { 
+        console.log("🎤 Mic listening...");
+        micBtn.classList.replace('bg-primary', 'bg-error');
+        micBtn.classList.replace('dark:bg-[#10b981]', 'dark:bg-red-500');
+        micBtn.classList.add('animate-pulse'); 
+      };
+
+      recognition.onresult = (e) => {
+        if (!e.results || !e.results.length) {
+            console.log("❌ No results from speech engine.");
+            return;
+        }
+
+        const transcript = e.results[0][0].transcript.toLowerCase();
+        const originalText = e.results[0][0].transcript; 
+        console.log("🗣️ Raw Transcript:", originalText);
+
+        const currencyRegex = /(?:rupees|rs|rupaye|rupaya|taka|tanka|roopai|rupay|₹)\s*(\d+)|(\d+)\s*(?:rupees|rs|rupaye|rupaya|taka|tanka|roopai|rupay|₹)?/i;
+        const match = transcript.match(currencyRegex);
+        
+        let extractedCost = 500; 
+        if (match) {
+            extractedCost = parseInt(match[1] || match[2]);
+        } else {
+            const genericDigit = transcript.match(/(\d+)/);
+            if (genericDigit) extractedCost = parseInt(genericDigit[1]);
+        }
+        
+        if (isNaN(extractedCost)) extractedCost = 500;
+        console.log("💰 Extracted Cost:", extractedCost);
+
+        const logTitle = "Voice Log: Expense";
+        const container = document.getElementById('timeline-container');
+        
+        // Ensure the container exists
+        if (!container) {
+            console.error("❌ Cannot find 'timeline-container' in the DOM.");
+            return;
+        }
+
+        // Force prepend the new log entry
+        const logHtml = `
+          <div class="relative mb-3 animate-fade-in-zoom voice-log-entry">
+            <div class="absolute -left-[25px] bg-secondary text-white w-6 h-6 rounded-full flex items-center justify-center shadow-md border-2 border-surface dark:border-dark-surface">
+              <span class="material-symbols-outlined text-[14px]">receipt_long</span>
+            </div>
+            <div class="bg-surface-container dark:bg-dark-surface p-3 rounded-xl shadow-sm border border-secondary/50 dark:border-orange-500/50">
+              <h3 class="font-bold text-sm text-on-surface dark:text-white">${logTitle}</h3>
+              <p class="text-xs text-on-surface-variant dark:text-gray-400 mt-0.5 capitalize">"${originalText}"</p>
+              <span class="text-xs font-bold text-error dark:text-red-400 block mt-1">- ₹${extractedCost.toLocaleString('en-IN')}</span>
+            </div>
+          </div>
+        `;
+        
+        // Insert at the very top of the ledger
+        container.insertAdjacentHTML('afterbegin', logHtml);
+        console.log("✅ Successfully injected HTML into ledger.");
+
+        const slider = document.getElementById('input-cost-slider');
+        const acres = parseFloat(document.getElementById('farm-acres-input').value) || 1.0;
+        if(slider) {
+            slider.value = Math.min(60000, parseFloat(slider.value) + (extractedCost / acres));
+            updateFinancials();
+            console.log("✅ Financials updated.");
+        }
+      };
+
+      recognition.onerror = (e) => {
+        console.error("⚠️ Speech error:", e.error);
+        micBtn.classList.replace('bg-error', 'bg-primary');
+        micBtn.classList.replace('dark:bg-red-500', 'dark:bg-[#10b981]');
+        micBtn.classList.remove('animate-pulse'); 
+      };
+
+      recognition.onend = () => { 
+        console.log("🛑 Mic stopped listening.");
+        micBtn.classList.replace('bg-error', 'bg-primary');
+        micBtn.classList.replace('dark:bg-red-500', 'dark:bg-[#10b981]');
+        micBtn.classList.remove('animate-pulse'); 
+      };
+
+      try {
+        recognition.start();
+      } catch (err) {
+        console.error("Failed to start recognition:", err);
+      }
+    }
+
+    async function loadTimeline() {
+      const container = document.getElementById('timeline-container');
+      try {
+        const response = await fetch('/api/v1/farm/history');
+        const result = await response.json();
+
+        if (result.status === 'success' && result.data.length > 0) {
+          container.innerHTML = '';
+          result.data.forEach(event => {
+            const itemHtml = `
+              <div class="relative mb-3">
+                <div class="absolute -left-[25px] bg-primary-container dark:bg-[#334155] text-white w-6 h-6 rounded-full flex items-center justify-center shadow-md border-2 border-surface dark:border-dark-surface">
+                  <span class="material-symbols-outlined text-[14px]">${event.icon_type}</span>
+                </div>
+                <div class="bg-surface-container dark:bg-dark-surface p-3 rounded-xl shadow-sm border border-surface-dim/40 dark:border-dark-border">
+                  <h3 class="font-bold text-sm text-on-surface dark:text-white">${event.title}</h3>
+                  <p class="text-xs text-on-surface-variant dark:text-gray-400 mt-0.5">${event.description}</p>
+                  <span class="text-[10px] font-bold text-outline dark:text-gray-500 uppercase block mt-1">${event.date_logged}</span>
+                </div>
+              </div>
+            `;
+            container.innerHTML += itemHtml;
+          });
+        }
+      } catch (error) {
+        console.error("Timeline history fallback active");
+      }
+    }
+
+    function exportTimelinePDF() {
+      const element = document.getElementById('timeline-container');
+      element.style.padding = '20px';
+      element.style.backgroundColor = document.documentElement.classList.contains('dark') ? '#1e293b' : '#ffffff';
+      element.style.borderRadius = '16px';
+
+      const opt = {
+        margin: 0.5,
+        filename: 'AnnaDATA_Crop_Ledger.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+
+      html2pdf().set(opt).from(element).save().then(() => {
+        element.style.padding = '0px';
+        element.style.backgroundColor = 'transparent';
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      applyUiLanguage();
+      initFarmData();
+    });
+
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'annadata_global_lang') applyUiLanguage();
+      if (e.key === 'annadata_user_profile') initFarmData();
+      if (e.key === 'theme') syncTheme();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "who are you": "I am AnnaDATA, an offline-first agronomic digital twin designed to empower Indian farmers with hyper-local telemetry, dynamic lifecycle accounting, and localized Edge-AI advisory without continuous internet connectivity.",
+  "how do you work": "AnnaDATA integrates on-device state caching, browser-based geocoding, local vector embeddings via ChromaDB, and quantized on-device LLMs (Qwen) with graceful heuristic fallback layers for intermittent connectivity zones.",
+  "fertilizer sugarcane": "For sugarcane in Odisha, the standard recommended NPK schedule is 250:100:60 kg/ha. Apply 25% Nitrogen along with full Phosphorus and 50% Potash at planting, followed by split Nitrogen top-dressing at 45 and 90 days during earthing up.",
+  "fertilizer paddy": "For high-yielding paddy varieties, apply 100-120:50-60:50-60 kg NPK/ha. Apply 25% Nitrogen, full Phosphorus, and 50% Potash as a basal puddle dose, with top-dressed Nitrogen splits at active tillering (21 DAT) and panicle initiation (42 DAT).",
+  "fertilizer wheat": "For irrigated wheat, use an NPK ratio of 120:60:40 kg/ha. Apply 50% Nitrogen and full P & K as basal dose, followed by 25% Nitrogen at first irrigation (CRI stage) and 25% at late jointing.",
+  "fertilizer cotton": "For Bt Cotton, apply 120:60:60 kg NPK/ha. Nitrogen should be split into 3-4 applications (basal, square formation, flowering, and boll development) to prevent flower shedding.",
+  "msp paddy": "The Minimum Support Price (MSP) for Paddy (Common) is set at ₹2,300 per quintal, while Grade A Paddy is ₹2,320 per quintal under CACP guidelines.",
+  "msp wheat": "The Minimum Support Price (MSP) for Wheat is ₹2,275 to ₹2,425 per quintal.",
+  "new rice variety": "OUAT recommends Kalinga Rice-1 (Kolab), a 130-day medium-duration variety yielding up to 5,307 kg/ha with high lodging and disease resistance in eastern agro-climatic zones.",
+  "new ginger variety": "OUAT Kalinga Ginger-1 (Subhada) is highly recommended. It delivers an average yield of 20 t/ha, suits rainfed/irrigated conditions in Odisha, and demonstrates robust resistance to rhizome bacterial wilt.",
+  "pm kisan": "Under PM-KISAN, eligible landholder farmer families receive ₹6,000 annually distributed in three equal installments of ₹2,000 directly into Aadhaar-linked bank accounts.",
+  "kalia scheme": "The Odisha KALIA scheme provides direct financial assistance to small and marginal farmers as well as landless agricultural households for purchasing quality agricultural inputs.",
+  "pm kusum subsidy": "Under PM-KUSUM Component-B, standalone solar agriculture pumps receive up to a 70% combined capital subsidy (30% Central Govt + 40% Odisha State Govt, with a 30% farmer share).",
+  "yellow leaves paddy": "Yellowing leaves in paddy typically indicate Nitrogen deficiency or Khaira disease (Zinc deficiency). Apply a foliar spray of 0.5% Zinc Sulphate mixed with 1.0% Urea dissolved in water twice at 10-day intervals.",
+  "stem borer": "For Yellow Stem Borer control in paddy, install pheromone traps at 8-10 traps/ha. For chemical intervention, apply Cartap Hydrochloride 4G at 25 kg/ha or Chlorantraniliprole 18.5% SC at 150 ml/ha.",
+  "fall armyworm": "For Fall Armyworm in Maize, apply neem cake into the whorls or perform a targeted spray of Emamectin Benzoate 5% SG (0.4 g/L) or Spinetoram 11.7% SC (0.5 ml/L) directly into the central leaf whorl."
+}

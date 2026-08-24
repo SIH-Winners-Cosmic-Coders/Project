@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script id="tailwind-config">
+    tailwind.config={darkMode:"class",theme:{extend:{"colors":{"primary":"#023625","primary-container":"#1f4d3a","surface":"#faf9f5","surface-dim":"#dbdad6","surface-container":"#efeeea","surface-container-lowest":"#ffffff","on-surface":"#1b1c1a","on-surface-variant":"#414944","outline":"#717973","secondary":"#974723","error":"#ba1a1a", "dark-surface":"#0f172a", "dark-card":"#1e293b", "dark-border":"#334155"}}}}
+  </script>
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; overscroll-behavior: none; }
+    ::-webkit-scrollbar { display: none; }
+    .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
+    .pt-safe { padding-top: env(safe-area-inset-top, 20px); }
+    .leaflet-control-attribution { display: none !important; }
+    .leaflet-marker-draggable { cursor: move !important; }
+    
+    /* Search Suggestions Dropdown Styling */
+    .suggestions-list {
+      max-height: 200px;
+      overflow-y: auto;
+    }
+  </style>
+  <script>
+    function syncTheme() { document.documentElement.classList.toggle('dark', localStorage.theme === 'dark'); }
+    syncTheme(); window.addEventListener('storage', (e) => { if (e.key === 'theme') syncTheme(); });
+  </script>
+</head>
+<body class="bg-surface dark:bg-dark-surface text-on-surface dark:text-white flex flex-col min-h-screen transition-colors duration-300">
+
+  <header class="fixed top-0 w-full z-[1000] pt-safe bg-surface/90 dark:bg-dark-surface/90 backdrop-blur-xl border-b border-surface-dim/40 dark:border-dark-border shadow-sm">
+    <div class="flex items-center justify-between h-16 px-5">
+      <div class="flex items-center gap-4">
+        <button onclick="goTo('home_dashboard')" class="active:opacity-70 transition-opacity">
+          <span class="material-symbols-outlined text-primary dark:text-[#a1d1b8] text-[28px]">arrow_back</span>
+        </button>
+        <h1 data-i18n="pageTitle" class="text-xl font-bold text-primary dark:text-[#a1d1b8]">Farm Boundary</h1>
+      </div>
+    </div>
+  </header>
+
+  <main class="w-full pt-16 flex-1 flex flex-col pb-28 animate-fade-in-zoom">
+    
+    <div class="relative w-full h-[45vh] bg-surface-dim dark:bg-dark-border z-0">
+      <div id="farm-map" class="w-full h-full z-0"></div>
+      
+      <!-- SEARCH BAR, VOICE, & SUGGESTIONS OVERLAY -->
+      <div class="absolute top-4 left-4 right-4 z-[500] flex flex-col gap-2 pointer-events-none">
+        
+        <div class="relative w-full pointer-events-auto">
+          <div class="flex items-center bg-white/95 dark:bg-dark-card/95 backdrop-blur-md rounded-xl shadow-lg border border-surface-dim dark:border-dark-border px-3 py-2 transition-colors">
+             <span class="material-symbols-outlined text-outline dark:text-gray-400">search</span>
+             <input type="text" id="location-search" placeholder="Search village or district..." autocomplete="off" class="w-full bg-transparent border-none outline-none px-2 text-sm text-on-surface dark:text-white placeholder:text-outline dark:placeholder:text-gray-500 font-medium">
+             
+             <!-- VOICE SEARCH BUTTON -->
+             <button onclick="startVoiceSearch()" id="voice-btn" class="text-primary dark:text-[#a1d1b8] mr-2 active:scale-90 transition-transform">
+               <span class="material-symbols-outlined text-[20px]">mic</span>
+             </button>
+             
+             <button onclick="executeSearch()" id="search-btn" class="bg-primary dark:bg-[#10b981] text-white dark:text-black rounded-lg px-3 py-1.5 text-xs font-bold active:scale-95 transition tracking-wide shrink-0">Find</button>
+          </div>
+          
+          <!-- SUGGESTIONS DROPDOWN -->
+          <ul id="suggestions-box" class="absolute w-full mt-1 bg-white dark:bg-dark-card rounded-xl shadow-xl border border-surface-dim dark:border-dark-border hidden suggestions-list divide-y divide-surface-dim/50 dark:divide-dark-border/50">
+            <!-- Dynamic items go here -->
+          </ul>
+        </div>
+
+        <div class="self-center mt-1">
+          <div id="map-status" class="bg-white/95 dark:bg-dark-card/95 backdrop-blur-md px-4 py-2 rounded-full shadow-md border border-surface-dim dark:border-dark-border pointer-events-auto transition-all">
+            <span data-i18n="statusSelect" class="text-xs font-bold text-primary dark:text-[#a1d1b8] tracking-wider uppercase" id="status-text">Select Method</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="absolute bottom-6 left-0 w-full px-5 z-[500] flex flex-col gap-3 pointer-events-none">
+        <div id="setup-options" class="flex gap-3 pointer-events-auto">
+          <button onclick="startManualDraw()" class="flex-1 bg-white dark:bg-dark-card text-on-surface dark:text-white font-bold py-3 px-4 rounded-xl shadow-lg border border-surface-dim dark:border-dark-border active:scale-95 transition flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined text-secondary dark:text-orange-400">polyline</span>
+            <span data-i18n="btnManual">Draw (4 Pins)</span>
+          </button>
+          <button onclick="useGPS()" class="flex-1 bg-primary dark:bg-[#10b981] text-white dark:text-black font-bold py-3 px-4 rounded-xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined">my_location</span>
+            <span data-i18n="btnGps">Use GPS</span>
+          </button>
+        </div>
+        <div id="action-group" class="hidden flex-col gap-2 pointer-events-auto">
+          <!-- Button renders dynamically via JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Telemetry Data Grid -->
+    <div class="px-5 pt-6 flex flex-col gap-4">
+      <h2 data-i18n="liveData" class="text-sm font-bold text-on-surface-variant dark:text-gray-400 uppercase tracking-wider">Live Field Telemetry</h2>
+      
+      <div class="grid grid-cols-2 gap-4">
+        <div class="bg-surface-container-lowest dark:bg-dark-card rounded-2xl p-4 shadow-sm border border-surface-dim/30 dark:border-dark-border">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="material-symbols-outlined text-secondary dark:text-orange-400">water_drop</span>
+            <span data-i18n="soilMoisture" class="text-[10px] font-bold text-on-surface-variant dark:text-gray-400 uppercase tracking-wider">Soil Moisture</span>
+          </div>
+          <span class="text-2xl font-bold text-on-surface dark:text-white">42%</span>
+        </div>
+        <div class="bg-surface-container-lowest dark:bg-dark-card rounded-2xl p-4 shadow-sm border border-surface-dim/30 dark:border-dark-border">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="material-symbols-outlined text-[#0284c7] dark:text-[#38bdf8]">air</span>
+            <span data-i18n="airTemp" class="text-[10px] font-bold text-on-surface-variant dark:text-gray-400 uppercase tracking-wider">Air Temp</span>
+          </div>
+          <span class="text-2xl font-bold text-on-surface dark:text-white">34°C</span>
+        </div>
+        <div class="bg-surface-container-lowest dark:bg-dark-card rounded-2xl p-4 shadow-sm border border-surface-dim/30 dark:border-dark-border">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="material-symbols-outlined text-primary dark:text-[#a1d1b8]">thermostat</span>
+            <span data-i18n="soilTemp" class="text-[10px] font-bold text-on-surface-variant dark:text-gray-400 uppercase tracking-wider">Soil Temp</span>
+          </div>
+          <span class="text-2xl font-bold text-on-surface dark:text-white">28°C</span>
+        </div>
+        <div class="bg-surface-container-lowest dark:bg-dark-card rounded-2xl p-4 shadow-sm border border-surface-dim/30 dark:border-dark-border">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="material-symbols-outlined text-[#78350f] dark:text-amber-600">terrain</span>
+            <span data-i18n="soilType" class="text-[10px] font-bold text-on-surface-variant dark:text-gray-400 uppercase tracking-wider">Soil Type</span>
+          </div>
+          <span data-i18n="soilTypeValue" class="text-lg font-bold text-on-surface dark:text-white">Alluvial</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    function goTo(target) {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'navigate', target: target }, '*');
+      }
+    }
+
+    let map = L.map('farm-map', { zoomControl: false }).setView([20.296, 85.824], 14);
+    
+    // UPGRADED TO GOOGLE MAPS HYBRID: Much better rural coverage + baked in names
+    L.tileLayer('http://mt0.google.com/vt/lyrs=y&hl=en&x={x}&y={y}&z={z}', { 
+      maxZoom: 22,
+      attribution: '© Google'
+    }).addTo(map);
+
+    let markers = [];
+    let activePolygon = null;
+    let livePolyline = null; 
+    let isDrawing = false;
+    let finalAcres = "0.0";
+    let locationType = "Unknown";
+
+    setTimeout(() => { map.invalidateSize(); }, 400);
+    // Calculate area of a polygon in Acres using Earth's radius
+    function calculatePolygonAreaAcres(latlngs) {
+      if (latlngs.length < 3) return 0;
+      let area = 0;
+      const R = 6378137; // Earth radius in meters
+      
+      for (let i = 0; i < latlngs.length; i++) {
+        let p1 = latlngs[i];
+        let p2 = latlngs[(i + 1) % latlngs.length];
+        
+        // Convert to radians
+        let lat1 = p1.lat * Math.PI / 180;
+        let lng1 = p1.lng * Math.PI / 180;
+        let lat2 = p2.lat * Math.PI / 180;
+        let lng2 = p2.lng * Math.PI / 180;
+
+        area += (lng2 - lng1) * (2 + Math.sin(lat1) + Math.sin(lat2));
+      }
+      area = Math.abs(area * R * R / 2.0); // Area in square meters
+      
+      // Convert square meters to Acres (1 acre = 4046.86 sq meters)
+      return (area / 4046.86).toFixed(2);
+    }
+    
+    // --- DEBOUNCED SEARCH SUGGESTIONS ---
+    let debounceTimer;
+    const searchInput = document.getElementById('location-search');
+    const suggestionsBox = document.getElementById('suggestions-box');
+
+    searchInput.addEventListener('input', function() {
+      clearTimeout(debounceTimer);
+      const query = this.value.trim();
+      
+      if(query.length < 3) {
+        suggestionsBox.classList.add('hidden');
+        return;
+      }
+      
+      // Wait 600ms after typing stops before calling API to prevent IP ban
+      debounceTimer = setTimeout(() => fetchSuggestions(query), 600);
+    });
+
+    // UPGRADED: Esri ArcGIS Search Engine for Dropdown Suggestions
+    async function fetchSuggestions(query) {
+      try {
+        const res = await fetch(`https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?f=json&singleLine=${encodeURIComponent(query)}&outFields=Match_addr,City&maxLocations=5`);
+        const data = await res.json();
+        
+        suggestionsBox.innerHTML = '';
+        if(data && data.candidates && data.candidates.length > 0) {
+          data.candidates.forEach(place => {
+            const li = document.createElement('li');
+            li.className = 'px-4 py-3 text-sm text-on-surface dark:text-white hover:bg-surface-dim dark:hover:bg-dark-border cursor-pointer transition-colors';
+            
+            const shortName = place.address;
+            li.innerText = shortName;
+            
+            li.onclick = () => {
+              searchInput.value = shortName;
+              suggestionsBox.classList.add('hidden');
+              flyToLocation(place.location.y, place.location.x);
+              locationType = place.attributes ? (place.attributes.City || place.attributes.Match_addr || shortName) : shortName;
+            };
+            suggestionsBox.appendChild(li);
+          });
+          suggestionsBox.classList.remove('hidden');
+        } else {
+          suggestionsBox.classList.add('hidden');
+        }
+      } catch(e) {
+        console.error("Geocoding failed", e);
+      }
+    }
+
+    // Hide suggestions if clicked outside
+    document.addEventListener('click', (e) => {
+      if(!searchInput.contains(e.target) && !suggestionsBox.contains(e.target)) {
+        suggestionsBox.classList.add('hidden');
+      }
+    });
+
+    // UPGRADED: Esri ArcGIS Search Engine for 'Find' button and 'Enter' key
+    async function executeSearch() {
+      const query = searchInput.value.trim();
+      if(!query) return;
+      suggestionsBox.classList.add('hidden');
+      
+      const searchBtn = document.getElementById('search-btn');
+      const originalText = searchBtn.innerText;
+      searchBtn.innerText = '...';
+      
+      const statusText = document.getElementById('status-text');
+      if(statusText) statusText.innerText = "SEARCHING SATELLITE...";
+      
+      try {
+        const res = await fetch(`https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?f=json&singleLine=${encodeURIComponent(query)}&outFields=Match_addr,City,Region&maxLocations=1`);
+        const data = await res.json();
+        
+        if(data && data.candidates && data.candidates.length > 0) {
+          const bestMatch = data.candidates[0];
+          flyToLocation(bestMatch.location.y, bestMatch.location.x);
+          locationType = bestMatch.attributes.City || bestMatch.attributes.Match_addr || query;
+        } else {
+          alert(`Could not locate "${query}". Try adding the district or state (e.g., "Khandagiri, Bhubaneswar").`);
+          if(statusText) statusText.innerText = "LOCATION NOT FOUND";
+        }
+      } catch(e) {
+        console.error("Search API Error:", e);
+        if(statusText) statusText.innerText = "SEARCH ERROR";
+      }
+      searchBtn.innerText = originalText;
+    }
+    
+    searchInput.addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') { executeSearch(); }
+    });
+
+    function flyToLocation(lat, lon) {
+      map.flyTo([parseFloat(lat), parseFloat(lon)], 17, {
+          animate: true,
+          duration: 1.5
+      });
+      document.getElementById('status-text').innerText = "TAP MAP TO DRAW BOUNDARY";
+    }
+
+    // --- VOICE SEARCH (Web Speech API) ---
+    function startVoiceSearch() {
+      const voiceBtn = document.getElementById('voice-btn');
+      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        alert("Voice search is not supported in this browser.");
+        return;
+      }
+      
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      
+      // Defaulting to Odia/Hindi based on settings
+      const lang = localStorage.getItem('annadata_global_lang') || 'en';
+      if(lang === 'hi') recognition.lang = 'hi-IN';
+      else if(lang === 'od') recognition.lang = 'or-IN'; // Odia language code
+      else recognition.lang = 'en-IN';
+      
+      recognition.onstart = function() {
+        voiceBtn.classList.add('text-error', 'dark:text-red-500', 'animate-pulse');
+        searchInput.placeholder = "Listening...";
+      };
+      
+      recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        searchInput.value = transcript;
+        fetchSuggestions(transcript); // Trigger debounced search manually
+      };
+      
+      recognition.onerror = function(event) {
+        console.error("Speech recognition error", event.error);
+        searchInput.placeholder = "Voice search failed.";
+      };
+      
+      recognition.onend = function() {
+        voiceBtn.classList.remove('text-error', 'dark:text-red-500', 'animate-pulse');
+        searchInput.placeholder = "Search village or district...";
+      };
+      
+      recognition.start();
+    }
+
+    // --- Core Map Logic ---
+    async function getCityName(lat, lng) {
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+        const data = await res.json();
+        if (data.address) {
+          const city = data.address.city || data.address.town || data.address.village || data.address.county || "Unknown";
+          const state = data.address.state || "";
+          return `${city}, ${state}`.toUpperCase();
+        }
+      } catch(e) {}
+      return "MAPPED LOCATION";
+    }
+
+    function renderConfirmButtons() {
+      const actionGroup = document.getElementById('action-group');
+      
+      // Use the dynamically calculated finalAcres here
+      actionGroup.innerHTML = `
+        <button onclick="confirmAndSync()" class="w-full bg-secondary dark:bg-orange-600 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2">
+          <span class="material-symbols-outlined">check_circle</span>
+          <span data-i18n="btnConfirm">Confirm Boundary: ${finalAcres} Acres</span>
+        </button>
+        <button onclick="resetMap()" class="w-full bg-white dark:bg-dark-card text-error dark:text-red-400 font-bold py-3 px-4 rounded-xl shadow-lg border border-error/20 dark:border-red-500/20 active:scale-95 transition flex items-center justify-center gap-2">
+          <span class="material-symbols-outlined">refresh</span>
+          <span data-i18n="btnReset">Reset / Redraw</span>
+        </button>
+      `;
+      actionGroup.classList.remove('hidden');
+      actionGroup.classList.add('flex');
+    }
+
+    function resetMap() {
+      if(activePolygon) { map.removeLayer(activePolygon); activePolygon = null; }
+      if(livePolyline) { map.removeLayer(livePolyline); livePolyline = null; }
+      markers.forEach(m => map.removeLayer(m));
+      markers = [];
+      isDrawing = false;
+      finalAcres = "0.0";
+      
+      document.getElementById('action-group').classList.add('hidden');
+      document.getElementById('action-group').classList.remove('flex');
+      document.getElementById('setup-options').classList.remove('hidden');
+      document.getElementById('setup-options').classList.add('flex');
+      
+      const currentLang = localStorage.getItem('annadata_global_lang') || 'en';
+      document.getElementById('status-text').innerText = i18nDict[currentLang].statusSelect || "Select Method";
+    }
+
+    function startManualDraw() {
+      isDrawing = true;
+      document.getElementById('setup-options').classList.add('hidden');
+      document.getElementById('setup-options').classList.remove('flex');
+      document.getElementById('action-group').classList.add('hidden');
+      document.getElementById('action-group').classList.remove('flex');
+      document.getElementById('status-text').innerText = "TAP 4 CORNERS ON MAP";
+      if(activePolygon) map.removeLayer(activePolygon);
+      if(livePolyline) map.removeLayer(livePolyline);
+      markers.forEach(m => map.removeLayer(m));
+      markers = [];
+    }
+
+   function createDraggableMarker(latlng) {
+      let m = L.marker(latlng, {draggable: true}).addTo(map);
+      
+      m.on('drag', function() {
+        if (activePolygon && markers.length === 4) {
+          // Update polygon shape
+          let newLatLngs = markers.map(marker => marker.getLatLng());
+          activePolygon.setLatLngs(newLatLngs);
+          
+          // --- NEW: Recalculate area on drag ---
+          finalAcres = calculatePolygonAreaAcres(newLatLngs);
+          renderConfirmButtons(); // Re-render the button with the new area
+          
+        } else if (livePolyline) {
+          livePolyline.setLatLngs(markers.map(marker => marker.getLatLng()));
+        }
+      });
+      return m;
+    }
+    
+    map.on('click', async function(e) {
+      if (!isDrawing) return;
+      if (markers.length < 4) {
+        let m = createDraggableMarker(e.latlng);
+        markers.push(m);
+        document.getElementById('status-text').innerText = `PIN ${markers.length}/4 PLACED`;
+
+        let currentLatLngs = markers.map(marker => marker.getLatLng());
+        if(livePolyline) map.removeLayer(livePolyline);
+        livePolyline = L.polyline(currentLatLngs, {color: '#a1d1b8', dashArray: '5, 8', weight: 3}).addTo(map);
+
+        if (markers.length === 4) {
+          isDrawing = false;
+          if(livePolyline) map.removeLayer(livePolyline); 
+          
+          let latlngs = markers.map(marker => marker.getLatLng());
+          
+          // Sort vertices to form a proper convex polygon
+          const centerLat = latlngs.reduce((sum, p) => sum + p.lat, 0) / 4;
+          const centerLng = latlngs.reduce((sum, p) => sum + p.lng, 0) / 4;
+          latlngs.sort((a, b) => { return Math.atan2(a.lat - centerLat, a.lng - centerLng) - Math.atan2(b.lat - centerLat, b.lng - centerLng); });
+          
+          markers.forEach((marker, index) => marker.setLatLng(latlngs[index]));
+          
+          activePolygon = L.polygon(latlngs, {color: '#a1d1b8', fillColor: '#1f4d3a', fillOpacity: 0.5}).addTo(map);
+          map.fitBounds(activePolygon.getBounds(), { padding: [20, 20] });
+          
+          // --- NEW: Calculate the real area ---
+          finalAcres = calculatePolygonAreaAcres(latlngs); 
+          
+          document.getElementById('status-text').innerText = "FETCHING CITY...";
+          locationType = await getCityName(latlngs[0].lat, latlngs[0].lng);
+          document.getElementById('status-text').innerText = "DRAG PINS TO ADJUST";
+          
+          renderConfirmButtons();
+        }
+      }
+    });
+
+    async function useGPS() {
+      document.getElementById('setup-options').classList.add('hidden');
+      document.getElementById('setup-options').classList.remove('flex');
+      document.getElementById('status-text').innerText = "ACQUIRING GPS...";
+      
+      setTimeout(async () => {
+        const lat = 20.2590;
+        const lng = 85.7918;
+        map.setView([lat, lng], 17);
+        const offset = 0.001; 
+        const latlngs = [ [lat - offset, lng - offset], [lat + offset, lng - offset], [lat + offset, lng + offset], [lat - offset, lng + offset] ];
+        if(activePolygon) map.removeLayer(activePolygon);
+        if(livePolyline) map.removeLayer(livePolyline);
+        markers.forEach(m => map.removeLayer(m));
+        markers = [];
+        latlngs.forEach(ll => { markers.push(createDraggableMarker(ll)); });
+        activePolygon = L.polygon(latlngs, {color: '#a1d1b8', fillColor: '#1f4d3a', fillOpacity: 0.5}).addTo(map);
+        finalAcres = "5.0";
+        document.getElementById('status-text').innerText = "FETCHING CITY...";
+        locationType = "BHUBANESWAR, ODISHA";
+        document.getElementById('status-text').innerText = "DRAG PINS TO ADJUST";
+        renderConfirmButtons();
+      }, 800); 
+    }
+
+    function confirmAndSync() {
+      const savedProfile = localStorage.getItem('annadata_user_profile');
+      let profile = savedProfile ? JSON.parse(savedProfile) : {};
+      profile.farm_size = `${finalAcres} Acres`;
+      profile.location = locationType; 
+      localStorage.setItem('annadata_user_profile', JSON.stringify(profile));
+      window.dispatchEvent(new Event('storage'));
+      
+      const actionGroup = document.getElementById('action-group');
+      actionGroup.innerHTML = `
+        <div class="w-full bg-primary dark:bg-[#10b981] text-white dark:text-black font-bold py-3.5 px-4 rounded-xl shadow-lg flex items-center justify-center gap-2">
+          <span class="material-symbols-outlined">verified</span>
+          <span>Boundary Saved & Synced!</span>
+        </div>
+        <button onclick="resetMap()" class="w-full bg-white dark:bg-dark-card text-error dark:text-red-400 font-bold py-3 px-4 rounded-xl shadow-lg border border-error/20 dark:border-red-500/20 active:scale-95 transition flex items-center justify-center gap-2 mt-2">
+          <span class="material-symbols-outlined">refresh</span>
+          <span data-i18n="btnReset">Reset / Redraw</span>
+        </button>
+      `;
+    }
+
+    const i18nDict = {
+      en: { pageTitle: "Farm Boundary", statusSelect: "Select Method", btnManual: "Draw (4 Pins)", btnGps: "Use GPS", btnConfirm: "Confirm Boundary", btnReset: "Reset / Redraw", liveData: "Live Field Telemetry", soilMoisture: "Soil Moisture", airTemp: "Air Temp", soilTemp: "Soil Temp", soilType: "Soil Type", soilTypeValue: "Alluvial" },
+      hi: { pageTitle: "खेत की सीमा", statusSelect: "विधि चुनें", btnManual: "ड्रा (4 पिन)", btnGps: "जीपीएस का उपयोग करें", btnConfirm: "सीमा की पुष्टि करें", btnReset: "रीसेट / फिर से ड्रा करें", liveData: "लाइव फील्ड टेलीमेट्री", soilMoisture: "मिट्टी की नमी", airTemp: "हवा का तापमान", soilTemp: "मिट्टी का तापमान", soilType: "मिट्टी का प्रकार", soilTypeValue: "जलोढ़" },
+      od: { pageTitle: "କ୍ଷେତ୍ର ସୀମା", statusSelect: "ପଦ୍ଧତି ବାଛନ୍ତୁ", btnManual: "ଅଙ୍କନ କରନ୍ତୁ (୪ ପିନ୍)", btnGps: "ଜିପିଏସ୍ ବ୍ୟବହାର କରନ୍ତୁ", btnConfirm: "ସୀମା ନିଶ୍ଚିତ କରନ୍ତୁ", btnReset: "ପୁନର୍ବାର ସେଟ୍ କରନ୍ତୁ", liveData: "ଲାଇଭ୍ ଫିଲ୍ଡ ଟେଲିମେଟ୍ରି", soilMoisture: "ମାଟିର ଆର୍ଦ୍ରତା", airTemp: "ବାୟୁ ତାପମାତ୍ରା", soilTemp: "ମାଟି ତାପମାତ୍ରା", soilType: "ମାଟି ପ୍ରକାର", soilTypeValue: "ପଟୁ ମାଟି" }
+    };
+    
+    function applyUiLanguage() {
+      const currentLang = localStorage.getItem('annadata_global_lang') || 'en';
+      const dict = i18nDict[currentLang] || i18nDict['en'];
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (dict[key]) el.innerText = dict[key];
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', applyUiLanguage);
+    window.addEventListener('storage', (e) => { if (e.key === 'annadata_global_lang') applyUiLanguage(); });
+    
+    // --- OFFLINE SERVICE WORKER CACHE REGISTRATION ---
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').then(registration => {
+        console.log('ServiceWorker registration successful');
+      }).catch(err => {
+        console.log('ServiceWorker registration failed: ', err);
+      });
+    }
+  </script>
+</body>
+</html>

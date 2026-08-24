@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>AnnaDATA - Farm Digital Twin</title>
+  
+  <link rel="manifest" href="/static/manifest.json" />
+  <meta name="theme-color" content="#10b981" />
+
+  <script src="/static/tailwind.js"></script>
+  <script src="https://unpkg.com/dexie@latest/dist/dexie.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <style>
+    #map { 
+      height: 200px !important; 
+      min-height: 200px !important; 
+      width: 100% !important; 
+      border-radius: 0.75rem; 
+      z-index: 1; 
+    }
+    input:checked ~ .block { background-color: #f43f5e; border-color: #e11d48; }
+    input:checked ~ .dot { transform: translateX(100%); background-color: #fff; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center p-3 sm:p-4">
+
+  <div class="w-full max-w-5xl space-y-3">
+    
+    <!-- Header -->
+    <header class="flex flex-col gap-2 bg-slate-900 border border-slate-800 p-3 rounded-2xl shadow-xl">
+      <div class="flex justify-between items-center">
+        <div>
+          <h1 id="ui-title" class="text-base sm:text-lg font-bold text-emerald-400 flex items-center gap-2">
+            🌾 AnnaDATA Edge Twin
+          </h1>
+          <p id="ui-subtitle" class="text-[11px] text-slate-400">Map Fusion • Live Climate • Offline Voice Advisory</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <div id="net-badge" class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5">
+            <span id="net-indicator-dot" class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span id="net-status-text">Online</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Simulate Offline Toggle -->
+      <div class="flex items-center justify-end border-t border-slate-800 pt-1.5">
+        <label for="simulate-offline" class="flex items-center cursor-pointer">
+          <div class="relative">
+            <input type="checkbox" id="simulate-offline" class="sr-only">
+            <div class="block bg-slate-700 w-8 h-4.5 rounded-full border border-slate-600"></div>
+            <div class="dot absolute left-0.5 top-0.5 bg-slate-300 w-3.5 h-3.5 rounded-full transition-transform"></div>
+          </div>
+          <div id="ui-simulate" class="ml-2 text-[11px] font-medium text-slate-400">
+            Simulate Edge/Offline Mode
+          </div>
+        </label>
+      </div>
+    </header>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
+      
+      <!-- LEFT COLUMN -->
+      <section class="space-y-3">
+        <!-- Map Card -->
+        <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl shadow-lg">
+          <div class="flex justify-between items-center mb-1.5">
+            <span id="ui-field-loc" class="text-xs font-bold text-slate-300 uppercase tracking-wider">📍 Farm Field Location</span>
+            <span id="coords-text" class="text-[10px] text-emerald-400 font-mono">20.2961° N, 85.8245° E</span>
+          </div>
+          <div id="map"></div>
+          <p id="ui-map-sub" class="text-[10px] text-slate-400 mt-1 italic text-center">Tap anywhere on the map to inspect farm coordinates.</p>
+        </div>
+
+        <!-- Telemetry Card -->
+        <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl shadow-lg space-y-2">
+          <div class="flex justify-between items-center border-b border-slate-800 pb-1">
+            <span id="ui-weather-twin" class="text-xs font-bold text-slate-300 uppercase tracking-wider">📊 Live Soil & Weather Twin</span>
+            <span id="live-indicator" class="text-[9px] bg-emerald-900/60 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/30">Synced</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <div class="bg-slate-800/80 p-2 rounded-xl border border-slate-700/60">
+              <span id="ui-lbl-temp" class="text-slate-400 block text-[9px]">Air Temp / Humidity</span>
+              <span id="metric-temp" class="text-emerald-300 font-semibold text-xs">-- °C</span>
+              <span id="metric-humidity" class="text-slate-400 text-[10px] block">RH: --%</span>
+            </div>
+            <div class="bg-slate-800/80 p-2 rounded-xl border border-slate-700/60">
+              <span id="ui-lbl-moist" class="text-slate-400 block text-[9px]">Soil Moisture (0-7cm)</span>
+              <span id="metric-soil-moist" class="text-sky-300 font-semibold text-xs">-- m³/m³</span>
+              <span id="metric-soil-status" class="text-emerald-400 text-[10px] block">Optimal</span>
+            </div>
+            <div class="bg-slate-800/80 p-2 rounded-xl border border-slate-700/60">
+              <span id="ui-lbl-rain" class="text-slate-400 block text-[9px]">Precipitation / Rain</span>
+              <span id="metric-rain" class="text-cyan-300 font-semibold text-xs">0.0 mm</span>
+              <span id="metric-rain-risk" class="text-slate-400 text-[10px] block">Low risk</span>
+            </div>
+            <div class="bg-slate-800/80 p-2 rounded-xl border border-slate-700/60">
+              <span id="ui-lbl-ndvi" class="text-slate-400 block text-[9px]">Estimated NDVI Health</span>
+              <span id="metric-ndvi" class="text-amber-300 font-semibold text-xs">0.72</span>
+              <span id="metric-ndvi-status" class="text-emerald-400 text-[10px] block">Healthy Biomass</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT COLUMN -->
+      <section class="space-y-3">
+        <!-- Dialect Selector -->
+        <div class="bg-slate-900 border border-slate-800 p-2.5 rounded-2xl flex justify-between items-center shadow-lg">
+          <label id="ui-dialect" class="text-xs font-medium text-slate-300">Farmer Dialect:</label>
+          <select id="langSelect" class="bg-slate-800 text-slate-200 text-xs border border-slate-700 rounded-lg px-2 py-1 focus:outline-none">
+            <option value="od" selected>Odia (ଓଡ଼ିଆ)</option>
+            <option value="hi">Hindi (हिन्दी)</option>
+            <option value="bn">Bengali (বাংলা)</option>
+            <option value="te">Telugu (తెలుగు)</option>
+            <option value="ta">Tamil (தமிழ்)</option>
+            <option value="mr">Marathi (मराठी)</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+
+        <!-- Chat Container -->
+        <div id="chat-container" class="bg-slate-900 border border-slate-800 p-2.5 rounded-2xl shadow-lg overflow-y-auto h-28 flex flex-col gap-1.5">
+        </div>
+
+        <!-- RLHF Feedback -->
+        <div id="feedback-section" class="hidden bg-slate-900 border border-slate-800 p-2 rounded-2xl flex items-center justify-between shadow-lg">
+          <span id="ui-feedback-text" class="text-[10px] text-slate-400 font-medium">Was this advice helpful?</span>
+          <div class="flex gap-2">
+            <button id="ui-btn-yes" onclick="submitFeedback('up')" class="bg-slate-800 hover:bg-emerald-600 text-emerald-400 hover:text-white px-3 py-1 rounded-lg border border-slate-700 text-[11px] transition">
+              👍 Yes
+            </button>
+            <button id="ui-btn-no" onclick="submitFeedback('down')" class="bg-slate-800 hover:bg-rose-600 text-rose-400 hover:text-white px-3 py-1 rounded-lg border border-slate-700 text-[11px] transition">
+              👎 No
+            </button>
+          </div>
+        </div>
+
+        <!-- Voice & Camera Controls -->
+        <div class="bg-slate-900 border border-slate-800 p-2 rounded-2xl shadow-lg flex flex-col items-center justify-center gap-1">
+          <input type="file" id="camera-input" accept="image/*" capture="environment" class="hidden" />
+
+          <div class="flex gap-3 items-center">
+            <button 
+              id="camera-btn" 
+              class="w-10 h-10 bg-slate-700 hover:bg-slate-600 text-emerald-400 rounded-full flex items-center justify-center shadow-lg transition border border-slate-600">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+            </button>
+
+            <button 
+              id="voice-btn" 
+              class="w-11 h-11 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full flex items-center justify-center shadow-lg transition">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 003-3V5a3 3 0 10-6 0v6a3 3 0 003 3z"/>
+              </svg>
+            </button>
+          </div>
+          
+          <span id="voice-text" class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Tap Mic to Speak or Cam to Scan</span>
+        </div>
+
+        <!-- Single Mandi Predictor Card -->
+        <div class="bg-slate-900 border border-slate-800 p-2.5 rounded-2xl shadow-lg">
+          <div class="flex justify-between items-center border-b border-slate-800 pb-1 mb-1.5">
+            <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">📈 Mandi Price Predictor</span>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-2 mb-1.5">
+            <select id="market-commodity" class="bg-slate-800 text-slate-200 text-xs border border-slate-700 rounded-lg px-2 py-1 focus:outline-none">
+              <option value="Wheat">Wheat</option>
+              <option value="Paddy">Paddy</option>
+              <option value="Potato">Potato</option>
+            </select>
+            <button id="predict-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded-lg px-2 py-1 transition font-medium">
+              Predict 30-Day Trend
+            </button>
+          </div>
+
+          <div class="w-full h-24">
+            <canvas id="marketChart"></canvas>
+          </div>
+          <p id="pred-result" class="text-[10px] text-emerald-400 mt-0.5 text-center font-medium"></p>
+        </div>
+
+      </section>
+
+    </div>
+  </div>
+  <!-- Floating Presentation Network Toggle (Global) -->
+  <div class="fixed bottom-24 right-5 z-[9999]">
+    <button id="demo-network-toggle" onclick="toggleDemoNetwork()" class="bg-[#10b981] text-white px-4 py-2 rounded-full shadow-lg font-bold flex items-center gap-2 border-2 border-white/20 transition-all hover:scale-105">
+      <span id="demo-network-icon" class="material-symbols-outlined text-[18px]">wifi</span>
+      <span id="demo-network-text" class="text-xs uppercase tracking-wide">Online Mode</span>
+    </button>
+  </div>
+  <script src="/static/app.js">
+    // --- GLOBAL DEMO OFFLINE SWITCH LOGIC ---
+    function initNetworkToggle() {
+      const isOffline = localStorage.getItem('annadata_demo_offline') === 'true';
+      updateToggleUI(isOffline);
+    }
+
+    function toggleDemoNetwork() {
+      const isOffline = localStorage.getItem('annadata_demo_offline') === 'true';
+      const newState = !isOffline;
+      
+      // Save global state
+      localStorage.setItem('annadata_demo_offline', newState);
+      
+      // Update the button UI
+      updateToggleUI(newState);
+      
+      // Dispatch a storage event so iframes/other pages know it changed immediately
+      window.dispatchEvent(new Event('storage'));
+    }
+
+    function updateToggleUI(isOffline) {
+      const btn = document.getElementById('demo-network-toggle');
+      const icon = document.getElementById('demo-network-icon');
+      const text = document.getElementById('demo-network-text');
+      
+      if (!btn) return;
+      
+      if (isOffline) {
+        btn.className = "bg-error dark:bg-red-600 text-white px-4 py-2 rounded-full shadow-lg font-bold flex items-center gap-2 border-2 border-white/20 transition-all animate-pulse";
+        icon.innerText = "wifi_off";
+        text.innerText = "Forced Offline";
+      } else {
+        btn.className = "bg-[#10b981] text-white px-4 py-2 rounded-full shadow-lg font-bold flex items-center gap-2 border-2 border-white/20 transition-all hover:scale-105";
+        icon.innerText = "wifi";
+        text.innerText = "Online Mode";
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', initNetworkToggle);
+  </script>
+  
+</body>
+</html>

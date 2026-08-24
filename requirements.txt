@@ -1,0 +1,41 @@
+# ==========================================
+# AnnaDATA Farm Digital Twin - Dependencies
+# ==========================================
+
+# --- Web & API Core ---
+fastapi[standard]>=0.110.0
+uvicorn[standard]>=0.28.0
+python-multipart>=0.0.9
+pydantic>=2.6.0
+requests>=2.31.0
+httpx>=0.27.0
+python-dotenv>=1.0.1
+
+# --- Local AI & LLM Engine ---
+ollama>=0.1.7
+google-generativeai>=0.4.1
+
+# --- RAG Pipeline & Vector Database ---
+langchain>=0.1.14
+langchain-community>=0.0.31
+langchain-text-splitters>=0.0.1
+chromadb>=0.4.24
+sentence-transformers>=2.6.1
+
+# --- Document & Image Processing ---
+pypdf>=4.1.0
+fpdf2>=2.7.8
+Pillow>=10.2.0
+
+# --- Machine Learning & Market Prediction ---
+numpy>=1.26.0
+pandas>=2.0.0
+joblib>=1.3.0
+scikit-learn>=1.4.0
+
+# --- Audio, Speech & Translation (Offline Models) ---
+torch>=2.0.0
+torchaudio>=2.0.0
+transformers>=4.38.0
+soundfile>=0.12.1
+gTTS>=2.5.1

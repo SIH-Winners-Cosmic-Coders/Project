@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "AnnaDATA - Farm Digital Twin",
+  "version": "1.0.0",
+  "description": "Offline-first agronomic digital twin, precision farming advisory, and multi-tier Edge AI.",
+  "icons": {
+    "16": "static/icons/icon16.png",
+    "48": "static/icons/icon48.png",
+    "128": "static/icons/icon128.png"
+  },
+  "action": {
+    "default_title": "Launch AnnaDATA Digital Twin",
+    "default_icon": {
+      "16": "static/icons/icon16.png",
+      "48": "static/icons/icon48.png",
+      "128": "static/icons/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1:8000/*",
+    "http://localhost:8000/*"
+  ]
+}
